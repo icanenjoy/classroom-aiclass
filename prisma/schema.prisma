@@ -1,0 +1,23 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Question {
+  id           String @id @default(cuid())
+  topic        String // 예: "윈도우함수", "집계함수"
+  questionText String
+  choices      String // JSON 문자열로 저장된 선택지 배열
+  answerIndex  Int
+  explanation  String // 정답+이유를 반드시 포함
+  difficulty   Int    @default(1)
+}
