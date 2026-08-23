@@ -10,6 +10,8 @@ import {
   type SavedBranch,
   type AnswerRecord,
 } from "@/lib/storage";
+import NotesPanel from "@/components/NotesPanel";
+import NotesDownloadButton from "@/components/NotesDownloadButton";
 
 type Question = {
   id: string;
@@ -449,6 +451,7 @@ export default function SqldPractice() {
         <Link href="/" className="text-sm text-gray-500 underline">
           시험 선택으로 돌아가기
         </Link>
+        <NotesDownloadButton />
       </main>
     );
   }
@@ -570,8 +573,10 @@ export default function SqldPractice() {
         )}
       </div>
 
-      {/* 오른쪽 1/3 — 다음에 새 기능 들어갈 자리, 지금은 비워둠 */}
-      <div className="hidden w-full md:block" />
+      <div className="hidden w-full md:block">
+        <p className="mb-1 text-xs font-semibold text-gray-400">노트</p>
+        <NotesPanel />
+      </div>
     </main>
   );
 }
