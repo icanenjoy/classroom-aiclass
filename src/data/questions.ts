@@ -6,6 +6,8 @@ export type Question = {
   answerIndex: number;
   explanation: string;
   difficulty: number;
+  // 해설 문장 안에 실제로 등장하는 문자열 그대로 적어야 클릭 가능한 단어로 표시됨
+  keywords: string[];
 };
 
 export const questions: Question[] = [
@@ -19,6 +21,7 @@ export const questions: Question[] = [
     explanation:
       "RANK()는 동점에게 같은 순위를 주고, 그 다음 순위를 동점 인원 수만큼 건너뜁니다(1,2,2,4). DENSE_RANK()는 건너뛰지 않고(1,2,2,3), ROW_NUMBER()는 동점이어도 무조건 순번을 다르게 매깁니다(1,2,3,4). '건너뛴다'는 조건이 핵심이라 RANK가 정답입니다.",
     difficulty: 1,
+    keywords: ["RANK()", "DENSE_RANK()", "ROW_NUMBER()"],
   },
   {
     id: "win-2",
@@ -30,6 +33,7 @@ export const questions: Question[] = [
     explanation:
       "DENSE_RANK()는 동점자에게 같은 순위를 주지만 다음 순위는 건너뛰지 않고 바로 이어집니다(1,2,2,3). RANK()와 헷갈리기 쉬운데, '건너뛴다/안 건너뛴다'가 둘을 구분하는 유일한 기준입니다.",
     difficulty: 1,
+    keywords: ["DENSE_RANK()", "RANK()"],
   },
   {
     id: "win-3",
@@ -41,6 +45,7 @@ export const questions: Question[] = [
     explanation:
       "ROW_NUMBER()는 정렬 기준값이 같아도 무조건 서로 다른 순번을 하나씩 부여합니다. 동점 처리를 전혀 하지 않는다는 점이 RANK/DENSE_RANK와 다릅니다.",
     difficulty: 1,
+    keywords: ["ROW_NUMBER()"],
   },
   {
     id: "win-4",
@@ -57,6 +62,7 @@ export const questions: Question[] = [
     explanation:
       "PARTITION BY는 GROUP BY처럼 행을 압축하지 않고, 윈도우 함수의 계산 범위만 그룹 단위로 나눕니다. 즉 부서(dept)마다 순위(RANK)가 1부터 새로 시작됩니다. 원본 행 수는 그대로 유지된다는 점이 GROUP BY와의 가장 큰 차이입니다.",
     difficulty: 2,
+    keywords: ["PARTITION BY", "GROUP BY"],
   },
   {
     id: "win-5",
@@ -73,6 +79,7 @@ export const questions: Question[] = [
     explanation:
       "ORDER BY 없이 PARTITION BY만 쓰면 파티션 전체 합계가 모든 행에 동일하게 나오지만(디폴트 프레임이 전체 파티션), ORDER BY가 추가되면 기본 프레임이 '파티션 시작부터 현재 행까지'로 바뀌어 누적(running total) 합계가 됩니다. ORDER BY 유무가 결과를 완전히 바꾼다는 게 시험에서 자주 나오는 함정입니다.",
     difficulty: 3,
+    keywords: ["PARTITION BY", "ORDER BY"],
   },
   {
     id: "win-6",
@@ -84,6 +91,7 @@ export const questions: Question[] = [
     explanation:
       "LAG()는 현재 행 기준으로 이전(과거) 행의 값을 가져오고, LEAD()는 다음(미래) 행의 값을 가져옵니다. '이전 입사자'라는 조건이 핵심이라 LAG가 정답입니다. LAG/LEAD를 반대로 외워서 틀리는 경우가 많습니다.",
     difficulty: 2,
+    keywords: ["LAG()", "LEAD()"],
   },
   {
     id: "win-7",
@@ -94,6 +102,7 @@ export const questions: Question[] = [
     explanation:
       "LEAD()는 현재 행 기준으로 지정한 만큼 뒤(다음)에 있는 행의 값을 가져옵니다. 전월 대비, 익월 대비 값을 비교할 때 LAG/LEAD를 함께 자주 씁니다.",
     difficulty: 2,
+    keywords: ["LEAD()"],
   },
   {
     id: "win-8",
@@ -104,6 +113,7 @@ export const questions: Question[] = [
     explanation:
       "NTILE(n)은 결과 집합을 지정한 n개의 그룹으로 최대한 균등하게 나누고 그룹 번호를 반환합니다. NTILE(4)는 상위 25%, 25~50% 같은 분위수 분석에 쓰입니다. PARTITION BY(4) 같은 문법은 존재하지 않습니다.",
     difficulty: 2,
+    keywords: ["NTILE(4)"],
   },
   {
     id: "win-9",
@@ -119,6 +129,7 @@ export const questions: Question[] = [
     explanation:
       "이 문제가 윈도우 함수 챕터에서 가장 중요한 개념입니다. GROUP BY는 '개별 행 + 그룹별 합계'를 동시에 보여줄 수 없지만(그룹당 1행으로 축소됨), 윈도우 함수는 원본 행을 그대로 두고 그 옆에 집계/순위 컬럼을 추가로 붙여줍니다. 그래서 '개별 데이터도 보고 싶고 순위/누적합도 같이 보고 싶다'는 요구에는 윈도우 함수를 씁니다.",
     difficulty: 2,
+    keywords: ["GROUP BY"],
   },
   {
     id: "win-10",
@@ -134,6 +145,7 @@ export const questions: Question[] = [
     explanation:
       "부서별 최고 급여 '직원 정보 전체'가 필요하면(이름 등 다른 컬럼 포함) GROUP BY + MAX만으로는 부족합니다(집계 안 한 컬럼을 같이 조회 못함). RANK()를 PARTITION BY dept로 매긴 뒤 바깥 쿼리에서 rnk=1인 행만 골라내는 것이 '부서별 TOP-N' 문제의 표준 패턴입니다.",
     difficulty: 3,
+    keywords: ["RANK()", "PARTITION BY", "GROUP BY"],
   },
   {
     id: "agg-1",
@@ -149,6 +161,7 @@ export const questions: Question[] = [
     explanation:
       "COUNT(*)는 행 자체의 개수를 세므로 NULL과 무관하게 전체 행 수가 나옵니다. 반면 COUNT(컬럼명)은 그 컬럼 값이 NULL인 행을 세지 않습니다. 이 차이 때문에 두 결과가 다르게 나오는 문제가 SQLD에 자주 출제됩니다.",
     difficulty: 1,
+    keywords: ["COUNT(*)", "COUNT(컬럼명)"],
   },
   {
     id: "agg-2",
@@ -164,6 +177,7 @@ export const questions: Question[] = [
     explanation:
       "SUM, AVG, MAX, MIN, COUNT(컬럼) 등 대부분의 집계 함수는 NULL 값을 자동으로 무시(제외)하고 나머지 값만으로 계산합니다. 'NULL=0'이라고 착각하기 쉬운데, 특히 AVG()는 분모(개수)에도 NULL 행이 포함되지 않으므로 평균값이 예상과 달라질 수 있습니다.",
     difficulty: 2,
+    keywords: ["AVG()", "NULL"],
   },
   {
     id: "agg-3",
@@ -175,6 +189,7 @@ export const questions: Question[] = [
     explanation:
       "WHERE는 GROUP BY로 묶기 '전' 개별 행을 필터링하고, HAVING은 GROUP BY로 묶은 '이후' 집계 결과(예: SUM, COUNT)를 조건으로 필터링합니다. 'SUM(salary) > 5000000인 부서만' 같은 조건은 반드시 HAVING을 써야 합니다.",
     difficulty: 1,
+    keywords: ["WHERE", "HAVING", "GROUP BY"],
   },
   {
     id: "agg-4",
@@ -191,6 +206,7 @@ export const questions: Question[] = [
     explanation:
       "GROUP BY를 쓰면 SELECT 절에는 (1) GROUP BY에 명시된 컬럼과 (2) 집계 함수로 감싼 컬럼만 올 수 있습니다. name은 부서 안에서 여러 값을 가질 수 있는데 어떤 name을 보여줘야 할지 정해지지 않으므로 표준 SQL에서는 오류입니다(DBMS에 따라 허용하기도 하지만 결과가 비결정적이라 SQLD에서는 오류로 간주).",
     difficulty: 2,
+    keywords: ["GROUP BY"],
   },
   {
     id: "agg-5",
@@ -206,6 +222,7 @@ export const questions: Question[] = [
     explanation:
       "GROUP BY 없이 집계 함수만 SELECT에 나열하면 테이블 전체를 하나의 그룹으로 보고 결과가 항상 1행으로 나옵니다. 반대로 dept처럼 집계 안 된 컬럼이 섞이면(①) GROUP BY 없이는 오류입니다. ④는 WHERE 절에 집계 함수를 직접 쓸 수 없어 오류입니다(집계 결과로 필터링하려면 서브쿼리나 HAVING 필요).",
     difficulty: 2,
+    keywords: ["GROUP BY", "WHERE", "HAVING"],
   },
   {
     id: "agg-6",
@@ -221,6 +238,7 @@ export const questions: Question[] = [
     explanation:
       "GROUP BY에 여러 컬럼을 나열하면 나열된 컬럼 값의 '조합'이 동일한 행끼리 하나의 그룹으로 묶입니다. 예를 들어 (개발팀, 사원)과 (개발팀, 대리)는 dept가 같아도 서로 다른 그룹입니다.",
     difficulty: 1,
+    keywords: ["GROUP BY"],
   },
   {
     id: "agg-7",
@@ -236,6 +254,7 @@ export const questions: Question[] = [
     explanation:
       "DISTINCT는 중복 값을 하나로 합치므로, COUNT(DISTINCT dept)는 '서로 다른 부서가 몇 개 있는가'를 셉니다. 부서별 인원수(③)를 구하려면 GROUP BY dept와 COUNT(*)를 함께 써야 합니다.",
     difficulty: 1,
+    keywords: ["COUNT(DISTINCT dept)", "GROUP BY", "COUNT(*)"],
   },
   {
     id: "agg-8",
@@ -252,6 +271,7 @@ export const questions: Question[] = [
     explanation:
       "부서별 집계값(AVG)을 기준으로 그룹을 필터링해야 하므로 HAVING을 쓰고, '전체 평균'은 서브쿼리로 따로 구해서 비교합니다. WHERE 절에는 집계 함수를 직접 쓸 수 없다는 점이 오답 ④를 걸러내는 포인트입니다.",
     difficulty: 3,
+    keywords: ["HAVING", "WHERE"],
   },
   {
     id: "win-11",
@@ -267,6 +287,7 @@ export const questions: Question[] = [
     explanation:
       "SQL 논리적 실행 순서는 FROM → WHERE → GROUP BY → HAVING → 윈도우 함수(SELECT 절 계산) → ORDER BY 순입니다. 그래서 WHERE 절에서는 윈도우 함수의 결과(예: RANK() 값)로 바로 필터링할 수 없고, 서브쿼리로 한 번 감싸야 합니다.",
     difficulty: 3,
+    keywords: ["WHERE", "GROUP BY", "HAVING", "ORDER BY", "RANK()"],
   },
   {
     id: "win-12",
@@ -282,5 +303,6 @@ export const questions: Question[] = [
     explanation:
       "SQL 실행 순서상 WHERE가 먼저 처리되고 윈도우 함수는 그 뒤에 계산되므로, WHERE 시점에는 RANK() 값이 아직 존재하지 않습니다. 그래서 RANK()로 필터링하려면 먼저 서브쿼리(또는 CTE)로 RANK()를 계산한 뒤, 바깥 쿼리의 WHERE에서 그 결과 컬럼을 필터링해야 합니다.",
     difficulty: 3,
+    keywords: ["WHERE", "RANK()"],
   },
 ];

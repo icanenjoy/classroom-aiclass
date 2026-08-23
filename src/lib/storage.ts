@@ -37,7 +37,7 @@ export type AnswerRecord = { selectedIndex: number; correct: boolean };
 
 export type SavedBranch = {
   id: string;
-  topic: string;
+  keyword: string;
   parentId: string | null;
   spawnIndex: number;
   depth: number;

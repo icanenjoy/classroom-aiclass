@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   addAttempt,
@@ -19,6 +19,7 @@ type Question = {
   answerIndex: number;
   explanation: string;
   difficulty: number;
+  keywords: string[];
 };
 
 const MAX_BRANCH_DEPTH = 5;
@@ -26,7 +27,7 @@ const MAX_BRANCH_QUESTIONS = 10; // 한 분기점(브랜치)당 최대 문제 �
 
 type Branch = {
   id: string;
-  topic: string;
+  keyword: string; // 해설에서 클릭한 단어 (예: "RANK()", "GROUP BY")
   parentId: string | null; // null = 메인 흐름에서 갈라짐
   spawnIndex: number; // 부모 흐름에서 이 브랜치가 갈라진 위치
   depth: number; // 메인 흐름에서 갈라진 첫 브랜치 = 1
@@ -109,7 +110,7 @@ export default function SqldPractice() {
           for (const [id, b] of Object.entries(saved.branches)) {
             restoredBranches[id] = {
               id: b.id,
-              topic: b.topic,
+              keyword: b.keyword,
               parentId: b.parentId,
               spawnIndex: b.spawnIndex,
               depth: b.depth ?? 1,
@@ -141,7 +142,7 @@ export default function SqldPractice() {
     for (const [id, b] of Object.entries(branches)) {
       savedBranches[id] = {
         id: b.id,
-        topic: b.topic,
+        keyword: b.keyword,
         parentId: b.parentId,
         spawnIndex: b.spawnIndex,
         depth: b.depth,
@@ -254,13 +255,13 @@ export default function SqldPractice() {
         }));
         return;
       }
-      // 미리 만들어두지 않고, 지금 필요한 시점에 같은 topic 문제를 하나 더 뽑는다.
-      // 안 쓴 문제를 우선 뽑되, 그 topic을 이미 다 써버렸으면 반복해서 또 뽑는다
+      // 미리 만들어두지 않고, 지금 필요한 시점에 같은 keyword 문제를 하나 더 뽑는다.
+      // 안 쓴 문제를 우선 뽑되, 그 keyword를 이미 다 써버렸으면 반복해서 또 뽑는다
       // (사용자가 원할 때까지 계속 풀 수 있어야 하고, "상위로 돌아가기"를 눌러야만 끝남)
       const usedIds = new Set(activeBranch.questions.map((q) => q.id));
-      const topicPool = allQuestions.filter((q) => q.topic === activeBranch.topic);
-      const unused = topicPool.filter((q) => !usedIds.has(q.id));
-      const pool = unused.length > 0 ? unused : topicPool;
+      const keywordPool = allQuestions.filter((q) => q.keywords.includes(activeBranch.keyword));
+      const unused = keywordPool.filter((q) => !usedIds.has(q.id));
+      const pool = unused.length > 0 ? unused : keywordPool;
       if (pool.length > 0) {
         const nextQuestion = shuffle(pool)[0];
         setSelected(null);
@@ -278,7 +279,7 @@ export default function SqldPractice() {
           };
         });
       } else {
-        // 이 topic에 문제가 아예 없는 경우(데이터 문제)에만 상위로 자동 복귀
+        // 이 keyword에 문제가 아예 없는 경우(데이터 문제)에만 상위로 자동 복귀
         popBranch(activeBranch);
       }
     } else {
@@ -307,36 +308,33 @@ export default function SqldPractice() {
     popBranch(activeBranch);
   }
 
-  // 브랜치 안에서 또 브랜치를 만들 때는(중첩) 같은 주제를 또 파고들지 않고
-  // 반드시 다른 주제로 넘어간다. 첫 번째 브랜치(메인 흐름에서 갈라지는 것)는
-  // 지금 막힌 그 개념을 그대로 더 푸는 것이므로 같은 주제 유지
-  // 지금 브랜치부터 위(부모) 방향으로 이미 쓰인 주제를 전부 모은다
-  function ancestorTopics(branch: Branch): Set<string> {
-    const topics = new Set<string>();
+  // 지금 브랜치부터 위(부모) 방향으로 이미 쓰인 keyword를 전부 모은다
+  function ancestorKeywords(branch: Branch): Set<string> {
+    const used = new Set<string>();
     let cur: Branch | undefined = branch;
     while (cur) {
-      topics.add(cur.topic);
+      used.add(cur.keyword);
       cur = cur.parentId ? branches[cur.parentId] : undefined;
     }
-    return topics;
+    return used;
   }
 
-  // 브랜치 깊이는 최대 5, 중첩 브랜치는 지금까지(조상 전체) 안 쓴 새로운 주제만
-  // 추천한다. 추천할 주제가 없으면 null(=버튼 숨김)
-  function nextDrillTopic(): string | null {
-    if (!current) return null;
-    if (!activeBranch) return current.topic;
-    if (activeBranch.depth >= MAX_BRANCH_DEPTH) return null;
-    const used = ancestorTopics(activeBranch);
-    const freshTopics = Array.from(new Set(allQuestions.map((q) => q.topic))).filter(
-      (t) => !used.has(t)
-    );
-    return freshTopics.length > 0 ? shuffle(freshTopics)[0] : null;
+  // 해설 안의 단어(keyword)를 클릭해서 브랜치를 만들 수 있는지 판정.
+  // - 브랜치 깊이가 5에 도달했으면 더 못 만듦
+  // - 중첩 브랜치는 조상 전체가 이미 쓴 keyword는 다시 못 씀(같은 개념 반복 방지)
+  // - 그 keyword를 가진 다른 문제가 없으면(현재 문제 제외) 못 만듦
+  function canDrillKeyword(keyword: string): boolean {
+    if (!current) return false;
+    if (activeBranch) {
+      if (activeBranch.depth >= MAX_BRANCH_DEPTH) return false;
+      if (ancestorKeywords(activeBranch).has(keyword)) return false;
+    }
+    return allQuestions.some((q) => q.id !== current.id && q.keywords.includes(keyword));
   }
 
-  function drillTopic(targetTopic: string) {
-    if (!current) return;
-    const candidates = allQuestions.filter((q) => q.topic === targetTopic && q.id !== current.id);
+  function drillKeyword(keyword: string) {
+    if (!current || !canDrillKeyword(keyword)) return;
+    const candidates = allQuestions.filter((q) => q.id !== current.id && q.keywords.includes(keyword));
     if (candidates.length === 0) return;
     const picked = shuffle(candidates)[0];
     const id = `branch-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -345,7 +343,7 @@ export default function SqldPractice() {
     const depth = activeBranch ? activeBranch.depth + 1 : 1;
     const newBranch: Branch = {
       id,
-      topic: targetTopic,
+      keyword,
       parentId,
       spawnIndex,
       depth,
@@ -359,12 +357,54 @@ export default function SqldPractice() {
     setSubmitted(false);
   }
 
+  // 해설 문장 안에서 keywords 배열에 있는 단어를 찾아 클릭 가능한 버튼으로 감싼다
+  function renderExplanation(text: string, keywords: string[]) {
+    type Seg = { start: number; end: number; keyword: string };
+    const segs: Seg[] = [];
+    for (const kw of keywords) {
+      const idx = text.indexOf(kw);
+      if (idx !== -1) segs.push({ start: idx, end: idx + kw.length, keyword: kw });
+    }
+    segs.sort((a, b) => a.start - b.start);
+    const clean: Seg[] = [];
+    let lastEnd = -1;
+    for (const s of segs) {
+      if (s.start >= lastEnd) {
+        clean.push(s);
+        lastEnd = s.end;
+      }
+    }
+    const nodes: ReactNode[] = [];
+    let cursor = 0;
+    clean.forEach((s, i) => {
+      if (s.start > cursor) nodes.push(text.slice(cursor, s.start));
+      const clickable = canDrillKeyword(s.keyword);
+      nodes.push(
+        clickable ? (
+          <button
+            key={i}
+            type="button"
+            onClick={() => drillKeyword(s.keyword)}
+            className="underline decoration-dotted decoration-blue-400 underline-offset-2 text-blue-700 hover:bg-blue-50"
+          >
+            {s.keyword}
+          </button>
+        ) : (
+          <span key={i}>{s.keyword}</span>
+        )
+      );
+      cursor = s.end;
+    });
+    if (cursor < text.length) nodes.push(text.slice(cursor));
+    return nodes;
+  }
+
   function renderBranch(branch: Branch, depth: number) {
     return (
       <div key={branch.id} style={{ marginLeft: depth * 10 }} className="mt-1 border-l-2 border-gray-300 pl-2">
         <div className="flex items-center gap-1">
           <span className="h-2 w-2 shrink-0 border-b-2 border-l-2 border-gray-300" />
-          <p className="text-[10px] font-medium text-gray-400">{branch.topic}</p>
+          <p className="text-[10px] font-medium text-gray-400">{branch.keyword}</p>
         </div>
         <div className="mt-0.5 space-y-0.5">
           {branch.questions.map((q, i) => {
@@ -420,7 +460,6 @@ export default function SqldPractice() {
 
   const isCorrect = submitted && selected === current.answerIndex;
   const topBranches = Object.values(branches).filter((b) => b.parentId === null);
-  const drillTarget = nextDrillTopic();
 
   return (
     <main className="mx-auto grid w-full grid-cols-1 gap-6 px-[100px] py-6 md:grid-cols-3">
@@ -464,7 +503,7 @@ export default function SqldPractice() {
         <div className="mb-4 flex items-center justify-between text-sm text-gray-500">
           <span>지금까지 총 {solvedCount}문제</span>
           <span className="rounded bg-gray-100 px-2 py-1">
-            {activeBranch ? `브랜치: ${activeBranch.topic}` : current.topic}
+            {activeBranch ? `브랜치: ${activeBranch.keyword}` : current.topic}
           </span>
         </div>
 
@@ -510,20 +549,17 @@ export default function SqldPractice() {
               }`}
             >
               <p className="mb-1 font-semibold">{isCorrect ? "정답입니다" : "오답입니다"}</p>
-              <p className="whitespace-pre-wrap">{current.explanation}</p>
+              <p className="whitespace-pre-wrap">
+                {renderExplanation(current.explanation, current.keywords)}
+              </p>
+              <p className="mt-2 text-xs text-gray-400">
+                밑줄 친 단어를 누르면 그 개념만 더 풀 수 있어요
+              </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button onClick={goNext} className="flex-1 rounded-md bg-black px-4 py-2 text-white">
                 다음 문제
               </button>
-              {drillTarget && (
-                <button
-                  onClick={() => drillTopic(drillTarget)}
-                  className="flex-1 rounded-md border border-black px-4 py-2"
-                >
-                  {drillTarget} 더 풀기
-                </button>
-              )}
               {activeBranch && (
                 <button
                   onClick={returnToParent}

@@ -65,7 +65,7 @@ const exams: Exam[] = [
         name: '토익',
         description: '준비중',
         href: null,
-        category: '미분류',
+        category: '문제형',
     },
     {
         id: 'nextjs',
@@ -91,6 +91,34 @@ const exams: Exam[] = [
     {
         id: 'unemployment-benefit',
         name: '실업급여 받는 방법',
+        description: '준비중',
+        href: null,
+        category: '실습형',
+    },
+    {
+        id: 'job-preparation',
+        name: '취업 준비하는 방법',
+        description: '준비중',
+        href: null,
+        category: '실습형',
+    },
+    {
+        id: 'job-preparation',
+        name: '가게 내는 방법',
+        description: '준비중',
+        href: null,
+        category: '실습형',
+    },
+    {
+        id: 'job-preparation',
+        name: '창업하는 방법',
+        description: '준비중',
+        href: null,
+        category: '실습형',
+    },
+    {
+        id: 'job-preparation',
+        name: '창업하는 방법',
         description: '준비중',
         href: null,
         category: '실습형',
