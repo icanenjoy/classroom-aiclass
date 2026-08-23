@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { addAttempt } from "@/lib/storage";
+import { addAttempt, saveSession, loadSession, clearSession, type SavedBranch } from "@/lib/storage";
 
 type Question = {
   id: string;
@@ -55,33 +55,94 @@ export default function SqldPractice() {
   const [selected, setSelected] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [sessionAnswered, setSessionAnswered] = useState(0);
-  const [sessionCorrect, setSessionCorrect] = useState(0);
+  const [hydrated, setHydrated] = useState(false);
 
-  const solvedCount = useMemo(() => {
+  const { solvedCount, answeredTotal, correctTotal } = useMemo(() => {
     const ids = new Set<string>();
+    let total = 0;
+    let correct = 0;
     mainFlow.forEach((q, i) => {
-      if (mainResults[i] !== null) ids.add(q.id);
+      if (mainResults[i] !== null) {
+        ids.add(q.id);
+        total++;
+        if (mainResults[i]) correct++;
+      }
     });
     Object.values(branches).forEach((b) => {
       b.questions.forEach((q, i) => {
-        if (b.results[i] !== null) ids.add(q.id);
+        if (b.results[i] !== null) {
+          ids.add(q.id);
+          total++;
+          if (b.results[i]) correct++;
+        }
       });
     });
-    return ids.size;
+    return { solvedCount: ids.size, answeredTotal: total, correctTotal: correct };
   }, [mainFlow, mainResults, branches]);
 
   useEffect(() => {
     fetch("/api/questions")
       .then((res) => res.json())
       .then((data: { questions: Question[] }) => {
-        const shuffled = shuffle(data.questions);
         setAllQuestions(data.questions);
-        setMainFlow(shuffled);
-        setMainResults(Array(shuffled.length).fill(null));
+        const byId = new Map(data.questions.map((q) => [q.id, q]));
+        const saved = loadSession();
+
+        if (saved && saved.mainFlowIds.length > 0) {
+          const restoredMain = saved.mainFlowIds
+            .map((id) => byId.get(id))
+            .filter((q): q is Question => !!q);
+          const restoredBranches: Record<string, Branch> = {};
+          for (const [id, b] of Object.entries(saved.branches)) {
+            restoredBranches[id] = {
+              id: b.id,
+              topic: b.topic,
+              parentId: b.parentId,
+              spawnIndex: b.spawnIndex,
+              questions: b.questionIds.map((qid) => byId.get(qid)).filter((q): q is Question => !!q),
+              results: b.results,
+              cursor: b.cursor,
+            };
+          }
+          setMainFlow(restoredMain);
+          setMainResults(saved.mainResults);
+          setMainIndex(saved.mainIndex);
+          setBranches(restoredBranches);
+          setActiveStack(saved.activeStack);
+        } else {
+          const shuffled = shuffle(data.questions);
+          setMainFlow(shuffled);
+          setMainResults(Array(shuffled.length).fill(null));
+        }
+
         setLoading(false);
+        setHydrated(true);
       });
   }, []);
+
+  // 메인 흐름·브랜치가 바뀔 때마다 저장 — 시험 선택 화면 갔다 와도 이어짐
+  useEffect(() => {
+    if (!hydrated) return;
+    const savedBranches: Record<string, SavedBranch> = {};
+    for (const [id, b] of Object.entries(branches)) {
+      savedBranches[id] = {
+        id: b.id,
+        topic: b.topic,
+        parentId: b.parentId,
+        spawnIndex: b.spawnIndex,
+        questionIds: b.questions.map((q) => q.id),
+        results: b.results,
+        cursor: b.cursor,
+      };
+    }
+    saveSession({
+      mainFlowIds: mainFlow.map((q) => q.id),
+      mainResults,
+      mainIndex,
+      branches: savedBranches,
+      activeStack,
+    });
+  }, [hydrated, mainFlow, mainResults, mainIndex, branches, activeStack]);
 
   const activeBranchId = activeStack[activeStack.length - 1] ?? null;
   const activeBranch = activeBranchId ? branches[activeBranchId] : null;
@@ -92,8 +153,6 @@ export default function SqldPractice() {
     if (selected === null || !current) return;
     setSubmitted(true);
     const isCorrect = selected === current.answerIndex;
-    setSessionAnswered((c) => c + 1);
-    if (isCorrect) setSessionCorrect((c) => c + 1);
 
     addAttempt({
       questionId: current.id,
@@ -215,23 +274,22 @@ export default function SqldPractice() {
   }
 
   if (done) {
-    const rate = sessionAnswered > 0 ? Math.round((sessionCorrect / sessionAnswered) * 100) : 0;
+    const rate = answeredTotal > 0 ? Math.round((correctTotal / answeredTotal) * 100) : 0;
     return (
       <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 p-6 text-center">
         <h1 className="text-2xl font-bold">SQL 함수 {mainFlow.length}문제를 모두 풀었습니다 🎉</h1>
         <p className="text-gray-600">
-          이번 세션 정답 {sessionCorrect} / {sessionAnswered} ({rate}%)
+          정답 {correctTotal} / {answeredTotal} ({rate}%)
         </p>
         <button
           className="rounded-md bg-black px-4 py-2 text-white"
           onClick={() => {
+            clearSession();
             setMainFlow((prev) => shuffle(prev));
             setMainResults((prev) => Array(prev.length).fill(null));
             setMainIndex(0);
             setBranches({});
             setActiveStack([]);
-            setSessionAnswered(0);
-            setSessionCorrect(0);
           }}
         >
           다시 풀기
