@@ -15,6 +15,8 @@ npm run dev
 
 [http://localhost:3000](http://localhost:3000) 에서 확인. 문제 데이터는 [`src/data/questions.ts`](./src/data/questions.ts)에 정적으로 들어있어 DB 없이 바로 동작한다.
 
+메인 흐름은 항상 30문제로 끝나지만, 해설 속 키워드를 눌러 같은 개념을 "더 풀기"로 반복할 때 문제가 금방 반복되지 않도록 전체 문제 풀은 30개보다 많게(현재 478개, 8개 토픽에 고르게 분포) 유지한다.
+
 ## 스택
 
 Next.js (App Router) + TypeScript. DB 없음 (정적 데이터 파일) — 이유는 `CLAUDE.md`의 "스택 변경 이력" 참고

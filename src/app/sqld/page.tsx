@@ -26,6 +26,7 @@ type Question = {
 
 const MAX_BRANCH_DEPTH = 5
 const MAX_BRANCH_QUESTIONS = 10 // 한 분기점(브랜치)당 최대 문제 수, 다 풀면 자동으로 상위 복귀
+const MAIN_FLOW_SIZE = 30 // 메인 흐름 문제 수. 전체 문제 풀은 이보다 커도 되며(브랜치 반복용), 메인은 항상 이 개수만 진행
 
 type Branch = {
     id: string
@@ -45,6 +46,29 @@ function shuffle<T>(arr: T[]): T[] {
         ;[copy[i], copy[j]] = [copy[j], copy[i]]
     }
     return copy
+}
+
+// SQLD 교재 순서(데이터 모델링의 이해 → 데이터 모델과 SQL → SQL 기본 → SQL 활용 → 관리구문)를
+// 따라 메인 흐름 30문제를 단계별로 일부씩 배분한다.
+const CURRICULUM_PLAN: { topic: string; count: number }[] = [
+    { topic: '데이터모델링', count: 3 }, // 데이터 모델링의 이해
+    { topic: '정규화', count: 3 }, // 데이터 모델과 SQL
+    { topic: '조인', count: 4 }, // SQL 기본
+    { topic: '서브쿼리', count: 4 }, // SQL 활용
+    { topic: '집계함수', count: 4 }, // SQL 활용
+    { topic: '윈도우함수', count: 3 }, // SQL 활용
+    { topic: '집합연산자', count: 3 }, // SQL 활용
+    { topic: '계층형질의', count: 3 }, // SQL 활용
+    { topic: '관리구문', count: 3 }, // 관리구문
+]
+
+function buildMainFlow(allQuestions: Question[]): Question[] {
+    const flow: Question[] = []
+    for (const { topic, count } of CURRICULUM_PLAN) {
+        const pool = shuffle(allQuestions.filter((q) => q.topic === topic))
+        flow.push(...pool.slice(0, count))
+    }
+    return flow
 }
 
 function StatusDot({
@@ -134,9 +158,9 @@ export default function SqldPractice() {
                     setBranches(restoredBranches)
                     setActiveStack(saved.activeStack)
                 } else {
-                    const first = shuffle(data.questions)[0]
-                    setMainFlow(first ? [first] : [])
-                    setMainResults(first ? [null] : [])
+                    const flow = buildMainFlow(data.questions)
+                    setMainFlow(flow)
+                    setMainResults(flow.map(() => null))
                 }
 
                 setLoading(false)
@@ -179,9 +203,9 @@ export default function SqldPractice() {
 
     function resetProgress() {
         clearSession()
-        const first = shuffle(allQuestions)[0]
-        setMainFlow(first ? [first] : [])
-        setMainResults(first ? [null] : [])
+        const flow = buildMainFlow(allQuestions)
+        setMainFlow(flow)
+        setMainResults(flow.map(() => null))
         setMainIndex(0)
         setBranches({})
         setActiveStack([])
@@ -319,10 +343,12 @@ export default function SqldPractice() {
                 setMainIndex(nextIndex)
                 return
             }
-            // 메인 흐름도 20개를 미리 만들어두지 않고, 필요한 시점에 하나씩 뽑는다
+            // 메인 흐름은 buildMainFlow()가 세션 시작 시 CURRICULUM_PLAN대로 이미 MAIN_FLOW_SIZE개를
+            // 다 만들어두므로 보통 여기까지 오지 않는다. 특정 토픽의 문제가 배분량보다 적어 모자란
+            // 경우에만 대비하는 안전장치로, 부족분은 교재 순서와 무관하게 남은 문제 중 무작위로 채운다.
             const usedIds = new Set(mainFlow.map((q) => q.id))
             const candidates = allQuestions.filter((q) => !usedIds.has(q.id))
-            if (candidates.length > 0) {
+            if (candidates.length > 0 && mainFlow.length < MAIN_FLOW_SIZE) {
                 const nextQuestion = shuffle(candidates)[0]
                 setMainFlow((prev) => [...prev, nextQuestion])
                 setMainResults((prev) => [...prev, null])
