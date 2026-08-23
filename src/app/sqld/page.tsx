@@ -316,8 +316,11 @@ export default function SqldPractice() {
 
   function renderBranch(branch: Branch, depth: number) {
     return (
-      <div key={branch.id} style={{ marginLeft: depth * 10 }} className="mt-1 border-l border-gray-200 pl-2">
-        <p className="text-[10px] font-medium text-gray-400">↳ {branch.topic}</p>
+      <div key={branch.id} style={{ marginLeft: depth * 10 }} className="mt-1 border-l-2 border-gray-300 pl-2">
+        <div className="flex items-center gap-1">
+          <span className="h-2 w-2 shrink-0 border-b-2 border-l-2 border-gray-300" />
+          <p className="text-[10px] font-medium text-gray-400">{branch.topic}</p>
+        </div>
         <div className="mt-0.5 space-y-0.5">
           {branch.questions.map((q, i) => {
             const isHere = activeBranchId === branch.id && branch.cursor === i;
@@ -385,13 +388,13 @@ export default function SqldPractice() {
   const topBranches = Object.values(branches).filter((b) => b.parentId === null);
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-6 p-6 md:flex-row">
-      <aside className="w-full shrink-0 overflow-x-auto md:w-52">
+    <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 p-6 md:grid-cols-3">
+      <aside className="w-full overflow-x-auto">
         <Link href="/" className="mb-3 block text-xs text-gray-500 underline">
           ← 시험 선택
         </Link>
         <p className="mb-1 text-xs font-semibold text-gray-400">메인 흐름</p>
-        <div className="space-y-0.5">
+        <div className="space-y-0.5 border-l-2 border-gray-300 pl-2">
           {mainFlow.map((q, i) => {
             const status: "current" | "correct" | "incorrect" | "pending" =
               !activeBranch && i === mainIndex
@@ -417,7 +420,7 @@ export default function SqldPractice() {
         </div>
       </aside>
 
-      <div className="mx-auto w-full max-w-xl">
+      <div className="w-full">
         <div className="mb-4 flex items-center justify-between text-sm text-gray-500">
           <span>지금까지 총 {solvedCount}문제</span>
           <span className="rounded bg-gray-100 px-2 py-1">
@@ -491,6 +494,9 @@ export default function SqldPractice() {
           </div>
         )}
       </div>
+
+      {/* 오른쪽 1/3 — 다음에 새 기능 들어갈 자리, 지금은 비워둠 */}
+      <div className="hidden w-full md:block" />
     </main>
   );
 }
