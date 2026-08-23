@@ -158,6 +158,23 @@ export default function SqldPractice() {
   const current = activeBranch ? activeBranch.questions[activeBranch.cursor] : mainFlow[mainIndex];
   const done = !activeBranch && mainIndex >= mainFlow.length && mainFlow.length > 0;
 
+  function resetProgress() {
+    clearSession();
+    const first = shuffle(allQuestions)[0];
+    setMainFlow(first ? [first] : []);
+    setMainResults(first ? [null] : []);
+    setMainIndex(0);
+    setBranches({});
+    setActiveStack([]);
+    setSelected(null);
+    setSubmitted(false);
+  }
+
+  function restart() {
+    if (!window.confirm("지금까지 푼 기록을 초기화하고 처음부터 다시 시작할까요?")) return;
+    resetProgress();
+  }
+
   function submitAnswer() {
     if (selected === null || !current) return;
     setSubmitted(true);
@@ -361,18 +378,7 @@ export default function SqldPractice() {
         <p className="text-gray-600">
           정답 {correctTotal} / {answeredTotal} ({rate}%)
         </p>
-        <button
-          className="rounded-md bg-black px-4 py-2 text-white"
-          onClick={() => {
-            clearSession();
-            const first = shuffle(allQuestions)[0];
-            setMainFlow(first ? [first] : []);
-            setMainResults(first ? [null] : []);
-            setMainIndex(0);
-            setBranches({});
-            setActiveStack([]);
-          }}
-        >
+        <button className="rounded-md bg-black px-4 py-2 text-white" onClick={resetProgress}>
           다시 풀기
         </button>
         <Link href="/" className="text-sm text-gray-500 underline">
@@ -390,9 +396,14 @@ export default function SqldPractice() {
   return (
     <main className="mx-auto grid w-full grid-cols-1 gap-6 px-[100px] py-6 md:grid-cols-3">
       <aside className="w-full overflow-x-auto">
-        <Link href="/" className="mb-3 block text-xs text-gray-500 underline">
-          ← 시험 선택
-        </Link>
+        <div className="mb-3 flex items-center justify-between">
+          <Link href="/" className="text-xs text-gray-500 underline">
+            ← 시험 선택
+          </Link>
+          <button onClick={restart} className="text-xs text-gray-400 underline">
+            초기화
+          </button>
+        </div>
         <p className="mb-1 text-xs font-semibold text-gray-400">메인 흐름</p>
         <div className="space-y-0.5 border-l-2 border-gray-300 pl-2">
           {mainFlow.map((q, i) => {
