@@ -1,4 +1,4 @@
-> 배포 URL: (Vercel 배포 후 이 줄에 기록)
+> 배포 URL: https://classroom-aiclass.vercel.app
 
 # SQLD 함수 문제 반복 학습
 
