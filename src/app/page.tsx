@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { addAttempt } from "@/lib/storage";
 
 type Question = {
   id: string;
@@ -52,9 +53,16 @@ export default function Home() {
     if (selected === null) return;
     setSubmitted(true);
     setAnsweredCount((c) => c + 1);
-    if (selected === current.answerIndex) {
+    const isCorrect = selected === current.answerIndex;
+    if (isCorrect) {
       setCorrectCount((c) => c + 1);
     }
+    addAttempt({
+      questionId: current.id,
+      topic: current.topic,
+      correct: isCorrect,
+      answeredAt: new Date().toISOString(),
+    });
   }
 
   function goNext() {
