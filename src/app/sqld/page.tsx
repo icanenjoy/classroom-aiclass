@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import {
     addAttempt,
@@ -103,6 +103,7 @@ export default function SqldPractice() {
     const [submitted, setSubmitted] = useState(false)
     const [loading, setLoading] = useState(true)
     const [hydrated, setHydrated] = useState(false)
+    const branchIdCounter = useRef(0)
 
     // 브랜치 안에서 같은 문제를 반복해서 풀 수 있으므로, 여기서는 "고유 문제 수"가
     // 아니라 사이드바에 찍힌 동그라미 수(=답한 시도 수)를 그대로 센다
@@ -396,7 +397,8 @@ export default function SqldPractice() {
         )
         if (candidates.length === 0) return
         const picked = shuffle(candidates)[0]
-        const id = `branch-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+        branchIdCounter.current += 1
+        const id = `branch-${branchIdCounter.current}`
         const spawnIndex = activeBranch ? activeBranch.cursor : mainIndex
         const parentId = activeBranch ? activeBranch.id : null
         const depth = activeBranch ? activeBranch.depth + 1 : 1
@@ -658,10 +660,12 @@ export default function SqldPractice() {
                                 {isCorrect ? '정답입니다' : '오답입니다'}
                             </p>
                             <p className="whitespace-pre-wrap">
+                                {/* eslint-disable react-hooks/immutability -- string은 원래 불변이라 실제 변경 불가능한 오탐 */}
                                 {renderExplanation(
                                     current.explanation,
-                                    current.keywords,
+                                    [...current.keywords],
                                 )}
+                                {/* eslint-enable react-hooks/immutability */}
                             </p>
                             <p className="mt-2 text-xs text-muted">
                                 밑줄 친 단어를 누르면 그 개념만 더 풀 수 있어요
