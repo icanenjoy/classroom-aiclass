@@ -1,9 +1,16 @@
 /* Crepe 기본 테마는 로드되지 않은 Noto Serif/Sans를 쓰다가 시스템 폰트로 깨져 보임 —
-   사이트 전체가 쓰는 Geist 폰트로 맞춘다 */
+   사이트 전체가 쓰는 Pretendard/Geist Mono 폰트로 맞춘다 */
 .milkdown {
-  --crepe-font-default: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  --crepe-font-title: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  --crepe-font-default: 'Pretendard', -apple-system, BlinkMacSystemFont,
+    'Apple SD Gothic Neo', 'Malgun Gothic', ui-sans-serif, system-ui, sans-serif;
+  --crepe-font-title: 'Pretendard', -apple-system, BlinkMacSystemFont,
+    'Apple SD Gothic Neo', 'Malgun Gothic', ui-sans-serif, system-ui, sans-serif;
   --crepe-font-code: var(--font-geist-mono), Menlo, Monaco, "Courier New", monospace;
+  --crepe-color-background: var(--color-surface);
+  --crepe-color-surface: var(--color-surface);
+  --crepe-color-outline: var(--color-line);
+  --crepe-color-on-surface: var(--color-ink);
+  --crepe-color-on-surface-variant: var(--color-muted);
 }
 
 /* 기본 테마의 padding: 60px 120px 는 전체 화면 폭 문서 기준이라

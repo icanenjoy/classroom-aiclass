@@ -54,12 +54,12 @@ function StatusDot({
 }) {
     const cls =
         status === 'current'
-            ? 'ring-2 ring-black bg-blue-300'
+            ? 'ring-2 ring-accent/30 bg-accent'
             : status === 'correct'
-              ? 'bg-green-500'
+              ? 'bg-correct'
               : status === 'incorrect'
-                ? 'bg-red-400'
-                : 'bg-gray-200'
+                ? 'bg-incorrect'
+                : 'bg-line'
     return (
         <span
             className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${cls}`}
@@ -418,11 +418,15 @@ export default function SqldPractice() {
                         key={i}
                         type="button"
                         onClick={() => drillKeyword(s.keyword)}
-                        className="underline decoration-dotted decoration-blue-400 underline-offset-2 text-blue-700 hover:bg-blue-50">
+                        className="rounded-sm border border-accent/40 bg-accent/10 px-1 py-0.5 font-mono text-xs text-accent hover:bg-accent/20">
                         {s.keyword}
                     </button>
                 ) : (
-                    <span key={i}>{s.keyword}</span>
+                    <span
+                        key={i}
+                        className="rounded-sm border border-line px-1 py-0.5 font-mono text-xs text-muted">
+                        {s.keyword}
+                    </span>
                 ),
             )
             cursor = s.end
@@ -436,10 +440,10 @@ export default function SqldPractice() {
             <div
                 key={branch.id}
                 style={{ marginLeft: depth * 10 }}
-                className="mt-1 border-l-2 border-gray-300 pl-2">
+                className="mt-1 border-l-2 border-line pl-2">
                 <div className="flex items-center gap-1">
-                    <span className="h-2 w-2 shrink-0 border-b-2 border-l-2 border-gray-300" />
-                    <p className="text-[10px] font-medium text-gray-400">
+                    <span className="h-2 w-2 shrink-0 border-b-2 border-l-2 border-line" />
+                    <p className="text-[10px] font-medium text-muted">
                         {branch.keyword}
                     </p>
                 </div>
@@ -466,7 +470,7 @@ export default function SqldPractice() {
                             <div key={`${branch.id}-${i}`}>
                                 <div className="flex items-center gap-1.5">
                                     <StatusDot status={status} />
-                                    <span className="text-[10px] text-gray-400">
+                                    <span className="text-[10px] text-muted">
                                         {i + 1}
                                     </span>
                                 </div>
@@ -483,7 +487,7 @@ export default function SqldPractice() {
 
     if (loading) {
         return (
-            <main className="mx-auto max-w-3xl p-6 text-gray-500">
+            <main className="mx-auto max-w-3xl p-6 text-muted">
                 불러오는 중...
             </main>
         )
@@ -496,18 +500,18 @@ export default function SqldPractice() {
                 : 0
         return (
             <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 p-6 text-center">
-                <h1 className="text-2xl font-bold">
+                <h1 className="text-2xl font-bold text-ink">
                     SQLD {mainFlow.length}문제를 모두 풀었습니다 🎉
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-muted">
                     정답 {correctTotal} / {answeredTotal} ({rate}%)
                 </p>
                 <button
-                    className="rounded-md bg-black px-4 py-2 text-white"
+                    className="rounded-md bg-accent px-4 py-2 text-white"
                     onClick={resetProgress}>
                     다시 풀기
                 </button>
-                <Link href="/" className="text-sm text-gray-500 underline">
+                <Link href="/" className="text-sm text-muted underline">
                     시험 선택으로 돌아가기
                 </Link>
                 <NotesDownloadButton />
@@ -523,22 +527,22 @@ export default function SqldPractice() {
     )
 
     return (
-        <main className="mx-auto grid w-full grid-cols-1 gap-6 px-[100px] py-6 md:grid-cols-3">
+        <main className="mx-auto grid w-full grid-cols-1 gap-6 bg-bg px-[100px] py-6 md:grid-cols-3">
             <aside className="w-full overflow-x-auto">
                 <div className="mb-3 flex items-center justify-between">
-                    <Link href="/" className="text-xs text-gray-500 underline">
+                    <Link href="/" className="text-xs text-muted underline">
                         ← 시험 선택
                     </Link>
                     <button
                         onClick={restart}
-                        className="text-xs text-gray-400 underline">
+                        className="text-xs text-muted underline">
                         초기화
                     </button>
                 </div>
-                <p className="mb-1 text-xs font-semibold text-gray-400">
+                <p className="mb-1 text-xs font-semibold text-muted">
                     메인 흐름
                 </p>
-                <div className="space-y-0.5 border-l-2 border-gray-300 pl-2">
+                <div className="space-y-0.5 border-l-2 border-line pl-2">
                     {mainFlow.map((q, i) => {
                         const status:
                             | 'current'
@@ -559,7 +563,7 @@ export default function SqldPractice() {
                             <div key={q.id}>
                                 <div className="flex items-center gap-1.5">
                                     <StatusDot status={status} />
-                                    <span className="text-[11px] text-gray-500">
+                                    <span className="text-[11px] text-muted">
                                         {i + 1}. {q.topic}
                                     </span>
                                 </div>
@@ -570,10 +574,10 @@ export default function SqldPractice() {
                 </div>
             </aside>
 
-            <div className="w-full">
-                <div className="mb-4 flex items-center justify-between text-sm text-gray-500">
+            <div className="w-full rounded-md border border-line bg-surface p-6">
+                <div className="mb-4 flex items-center justify-between text-sm text-muted">
                     <span>지금까지 총 {answeredTotal}문제</span>
-                    <span className="rounded bg-gray-100 px-2 py-1">
+                    <span className="rounded-sm bg-bg px-2 py-1">
                         {activeBranch
                             ? `브랜치: ${activeBranch.keyword}`
                             : current.topic}
@@ -588,13 +592,15 @@ export default function SqldPractice() {
                     {current.choices.map((choice, i) => {
                         const isSelected = selected === i
                         const isAnswer = i === current.answerIndex
-                        let style = 'border-gray-300'
+                        let style = 'border-line'
                         if (submitted) {
-                            if (isAnswer) style = 'border-green-600 bg-green-50'
+                            if (isAnswer)
+                                style = 'border-correct bg-correct/10 text-correct'
                             else if (isSelected)
-                                style = 'border-red-500 bg-red-50'
+                                style =
+                                    'border-incorrect bg-incorrect/10 text-incorrect'
                         } else if (isSelected) {
-                            style = 'border-black'
+                            style = 'border-accent'
                         }
                         return (
                             <button
@@ -612,7 +618,7 @@ export default function SqldPractice() {
                     <button
                         disabled={selected === null}
                         onClick={submitAnswer}
-                        className="mt-4 rounded-md bg-black px-4 py-2 text-white disabled:opacity-30">
+                        className="mt-4 rounded-md bg-accent px-4 py-2 text-white disabled:opacity-30">
                         제출
                     </button>
                 ) : (
@@ -620,8 +626,8 @@ export default function SqldPractice() {
                         <div
                             className={`rounded-md p-3 text-sm ${
                                 isCorrect
-                                    ? 'bg-green-50 text-green-800'
-                                    : 'bg-red-50 text-red-800'
+                                    ? 'bg-correct/10 text-correct'
+                                    : 'bg-incorrect/10 text-incorrect'
                             }`}>
                             <p className="mb-1 font-semibold">
                                 {isCorrect ? '정답입니다' : '오답입니다'}
@@ -632,20 +638,20 @@ export default function SqldPractice() {
                                     current.keywords,
                                 )}
                             </p>
-                            <p className="mt-2 text-xs text-gray-400">
+                            <p className="mt-2 text-xs text-muted">
                                 밑줄 친 단어를 누르면 그 개념만 더 풀 수 있어요
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                             <button
                                 onClick={goNext}
-                                className="flex-1 rounded-md bg-black px-4 py-2 text-white">
+                                className="flex-1 rounded-md bg-accent px-4 py-2 text-white">
                                 다음 문제
                             </button>
                             {activeBranch && (
                                 <button
                                     onClick={returnToParent}
-                                    className="flex-1 rounded-md border border-gray-300 px-4 py-2 text-gray-500">
+                                    className="flex-1 rounded-md border border-line px-4 py-2 text-muted">
                                     상위 흐름으로 돌아가기
                                 </button>
                             )}
@@ -655,7 +661,7 @@ export default function SqldPractice() {
             </div>
 
             <div className="hidden w-full md:block">
-                <p className="mb-1 text-xs font-semibold text-gray-400">
+                <p className="mb-1 text-xs font-semibold text-muted">
                     나의 개념 정리
                 </p>
                 <NotesPanel />

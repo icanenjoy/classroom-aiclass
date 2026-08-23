@@ -33,7 +33,7 @@ export default function NotesPanel() {
   return (
     <div
       ref={containerRef}
-      className="min-h-[300px] w-full overflow-y-auto rounded-md border border-gray-200 text-sm"
+      className="min-h-[300px] w-full overflow-y-auto rounded-md border border-line text-sm"
     />
   );
 }

@@ -141,48 +141,63 @@ const exams: Exam[] = [
 
 const categories: Category[] = ['문제형', '실습형', '미분류']
 
-function ExamCard({ exam }: { exam: Exam }) {
-    if (exam.href) {
-        return (
-            <Link
-                href={exam.href}
-                className="rounded-md border border-black p-4 hover:bg-gray-50">
-                <p className="font-semibold">{exam.name}</p>
-                <p className="text-sm text-gray-500">{exam.description}</p>
-            </Link>
-        )
-    }
-    return (
-        <div className="rounded-md border border-gray-200 p-4 text-gray-400">
-            <p className="font-semibold">{exam.name}</p>
-            <p className="text-sm">{exam.description}</p>
-        </div>
-    )
-}
-
 export default function ExamSelect() {
+    const heroExam = exams.find((exam) => exam.href)
+    const comingSoon = exams.filter((exam) => !exam.href)
+
     return (
-        <main className="mx-auto max-w-xl p-6">
-            <h1 className="mb-1 text-2xl font-bold">시험을 선택하세요</h1>
-            <p className="mb-6 text-sm text-gray-500">
+        <main className="mx-auto max-w-2xl px-6 py-10">
+            <h1 className="mb-1 text-2xl font-bold text-ink">시험을 선택하세요</h1>
+            <p className="mb-8 text-sm text-muted">
                 문제를 풀면서 익힙니다. 이론보다 실습이 먼저입니다.
             </p>
-            {categories.map((category) => {
-                const items = exams.filter((exam) => exam.category === category)
-                if (items.length === 0) return null
-                return (
-                    <section key={category} className="mb-6">
-                        <h2 className="mb-2 text-sm font-semibold text-gray-500">
-                            {category}
-                        </h2>
-                        <div className="grid grid-cols-2 gap-3">
-                            {items.map((exam) => (
-                                <ExamCard key={exam.id} exam={exam} />
-                            ))}
-                        </div>
-                    </section>
-                )
-            })}
+
+            {heroExam && (
+                <Link
+                    href={heroExam.href!}
+                    className="mb-10 block rounded-md border-2 border-accent bg-surface p-6 hover:bg-accent/5">
+                    <p className="text-xs font-semibold tracking-wide text-accent uppercase">
+                        지금 풀 수 있는 시험
+                    </p>
+                    <h2 className="mt-2 text-xl font-bold text-ink">
+                        {heroExam.name}
+                    </h2>
+                    <p className="mt-1 text-sm text-muted">
+                        {heroExam.description}
+                    </p>
+                    <span className="mt-4 inline-block rounded-sm bg-accent px-4 py-2 text-sm font-medium text-white">
+                        시작하기
+                    </span>
+                </Link>
+            )}
+
+            <section>
+                <h3 className="mb-3 text-xs font-semibold text-muted">준비중</h3>
+                <div className="space-y-2">
+                    {categories.map((category) => {
+                        const items = comingSoon.filter(
+                            (exam) => exam.category === category,
+                        )
+                        if (items.length === 0) return null
+                        return (
+                            <div
+                                key={category}
+                                className="flex flex-wrap items-center gap-2">
+                                <span className="w-16 shrink-0 text-[11px] text-muted">
+                                    {category}
+                                </span>
+                                {items.map((exam) => (
+                                    <span
+                                        key={exam.id}
+                                        className="rounded-sm border border-line px-2 py-1 text-xs text-muted">
+                                        {exam.name}
+                                    </span>
+                                ))}
+                            </div>
+                        )
+                    })}
+                </div>
+            </section>
         </main>
     )
 }
