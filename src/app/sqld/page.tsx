@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { addAttempt } from "@/lib/storage";
+import { addAttempt, getStats, type Stats } from "@/lib/storage";
 
 type Question = {
   id: string;
@@ -57,6 +57,11 @@ export default function SqldPractice() {
   const [loading, setLoading] = useState(true);
   const [sessionAnswered, setSessionAnswered] = useState(0);
   const [sessionCorrect, setSessionCorrect] = useState(0);
+  const [stats, setStats] = useState<Stats>({ total: 0, correctRate: 0 });
+
+  useEffect(() => {
+    setStats(getStats());
+  }, []);
 
   useEffect(() => {
     fetch("/api/questions")
@@ -88,6 +93,7 @@ export default function SqldPractice() {
       correct: isCorrect,
       answeredAt: new Date().toISOString(),
     });
+    setStats(getStats());
 
     if (activeBranch) {
       setBranches((prev) => {
@@ -271,7 +277,7 @@ export default function SqldPractice() {
       <div className="mx-auto w-full max-w-xl">
         <div className="mb-4 flex items-center justify-between text-sm text-gray-500">
           <span>
-            {sessionAnswered}문제 풀이 · 정답 {sessionCorrect}개
+            지금까지 총 {stats.total}문제 · 정답률 {stats.correctRate}%
           </span>
           <span className="rounded bg-gray-100 px-2 py-1">
             {activeBranch ? `브랜치: ${activeBranch.topic}` : current.topic}
