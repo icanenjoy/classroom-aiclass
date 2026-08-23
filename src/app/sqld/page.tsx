@@ -2,7 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { addAttempt, saveSession, loadSession, clearSession, type SavedBranch } from "@/lib/storage";
+import {
+  addAttempt,
+  saveSession,
+  loadSession,
+  clearSession,
+  type SavedBranch,
+  type AnswerRecord,
+} from "@/lib/storage";
 
 type Question = {
   id: string;
@@ -20,7 +27,7 @@ type Branch = {
   parentId: string | null; // null = 메인 흐름에서 갈라짐
   spawnIndex: number; // 부모 흐름에서 이 브랜치가 갈라진 위치
   questions: Question[];
-  results: (boolean | null)[];
+  results: (AnswerRecord | null)[];
   cursor: number;
 };
 
@@ -48,7 +55,7 @@ function StatusDot({ status }: { status: "current" | "correct" | "incorrect" | "
 export default function SqldPractice() {
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
   const [mainFlow, setMainFlow] = useState<Question[]>([]);
-  const [mainResults, setMainResults] = useState<(boolean | null)[]>([]);
+  const [mainResults, setMainResults] = useState<(AnswerRecord | null)[]>([]);
   const [mainIndex, setMainIndex] = useState(0);
   const [branches, setBranches] = useState<Record<string, Branch>>({});
   const [activeStack, setActiveStack] = useState<string[]>([]);
@@ -62,18 +69,20 @@ export default function SqldPractice() {
     let total = 0;
     let correct = 0;
     mainFlow.forEach((q, i) => {
-      if (mainResults[i] !== null) {
+      const r = mainResults[i];
+      if (r !== null && r !== undefined) {
         ids.add(q.id);
         total++;
-        if (mainResults[i]) correct++;
+        if (r.correct) correct++;
       }
     });
     Object.values(branches).forEach((b) => {
       b.questions.forEach((q, i) => {
-        if (b.results[i] !== null) {
+        const r = b.results[i];
+        if (r !== null && r !== undefined) {
           ids.add(q.id);
           total++;
-          if (b.results[i]) correct++;
+          if (r.correct) correct++;
         }
       });
     });
@@ -153,6 +162,7 @@ export default function SqldPractice() {
     if (selected === null || !current) return;
     setSubmitted(true);
     const isCorrect = selected === current.answerIndex;
+    const record: AnswerRecord = { selectedIndex: selected, correct: isCorrect };
 
     addAttempt({
       questionId: current.id,
@@ -165,60 +175,99 @@ export default function SqldPractice() {
       setBranches((prev) => {
         const b = prev[activeBranch.id];
         const results = [...b.results];
-        results[b.cursor] = isCorrect;
+        results[b.cursor] = record;
         return { ...prev, [b.id]: { ...b, results } };
       });
     } else {
       setMainResults((prev) => {
         const copy = [...prev];
-        copy[mainIndex] = isCorrect;
+        copy[mainIndex] = record;
         return copy;
       });
     }
   }
 
+  // 브랜치를 닫고 상위(부모) 흐름으로 돌아간다. 분기를 냈던 문제 자리로
+  // 돌아가서, 그 문제를 이미 제출된 상태 그대로 다시 보여준다.
   function popBranch(branch: Branch) {
     setActiveStack((stack) => stack.slice(0, -1));
+    const record: AnswerRecord | null | undefined =
+      branch.parentId === null
+        ? mainResults[branch.spawnIndex]
+        : branches[branch.parentId]?.results[branch.spawnIndex];
+
     if (branch.parentId === null) {
-      setMainIndex(branch.spawnIndex + 1);
+      setMainIndex(branch.spawnIndex);
     } else {
       setBranches((prev) => {
         const parent = prev[branch.parentId as string];
-        return { ...prev, [parent.id]: { ...parent, cursor: branch.spawnIndex + 1 } };
+        return { ...prev, [parent.id]: { ...parent, cursor: branch.spawnIndex } };
       });
+    }
+
+    if (record) {
+      setSelected(record.selectedIndex);
+      setSubmitted(true);
+    } else {
+      setSelected(null);
+      setSubmitted(false);
     }
   }
 
   function goNext() {
-    setSelected(null);
-    setSubmitted(false);
     if (activeBranch) {
       const nextCursor = activeBranch.cursor + 1;
       if (nextCursor < activeBranch.questions.length) {
+        setSelected(null);
+        setSubmitted(false);
         setBranches((prev) => ({
           ...prev,
           [activeBranch.id]: { ...prev[activeBranch.id], cursor: nextCursor },
         }));
+        return;
+      }
+      // 미리 만들어두지 않고, 지금 필요한 시점에 같은 topic 문제를 하나 더 뽑는다
+      const usedIds = new Set(activeBranch.questions.map((q) => q.id));
+      const candidates = allQuestions.filter(
+        (q) => q.topic === activeBranch.topic && !usedIds.has(q.id)
+      );
+      if (candidates.length > 0) {
+        const nextQuestion = shuffle(candidates)[0];
+        setSelected(null);
+        setSubmitted(false);
+        setBranches((prev) => {
+          const b = prev[activeBranch.id];
+          return {
+            ...prev,
+            [b.id]: {
+              ...b,
+              questions: [...b.questions, nextQuestion],
+              results: [...b.results, null],
+              cursor: nextCursor,
+            },
+          };
+        });
       } else {
+        // 같은 topic 문제를 다 써버렸으면 상위로 자동 복귀
         popBranch(activeBranch);
       }
     } else {
+      setSelected(null);
+      setSubmitted(false);
       setMainIndex((i) => i + 1);
     }
   }
 
   function returnToParent() {
     if (!activeBranch) return;
-    setSelected(null);
-    setSubmitted(false);
     popBranch(activeBranch);
   }
 
   function drillTopic() {
     if (!current) return;
-    const pool = shuffle(allQuestions.filter((q) => q.topic === current.topic && q.id !== current.id));
-    const picked = pool.slice(0, Math.min(5, pool.length));
-    if (picked.length === 0) return;
+    const candidates = allQuestions.filter((q) => q.topic === current.topic && q.id !== current.id);
+    if (candidates.length === 0) return;
+    const picked = shuffle(candidates)[0];
     const id = `branch-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const spawnIndex = activeBranch ? activeBranch.cursor : mainIndex;
     const parentId = activeBranch ? activeBranch.id : null;
@@ -227,8 +276,8 @@ export default function SqldPractice() {
       topic: current.topic,
       parentId,
       spawnIndex,
-      questions: picked,
-      results: Array(picked.length).fill(null),
+      questions: [picked],
+      results: [null],
       cursor: 0,
     };
     setBranches((prev) => ({ ...prev, [id]: newBranch }));
@@ -246,11 +295,11 @@ export default function SqldPractice() {
             const isHere = activeBranchId === branch.id && branch.cursor === i;
             const status: "current" | "correct" | "incorrect" | "pending" = isHere
               ? "current"
-              : branch.results[i] === true
-                ? "correct"
-                : branch.results[i] === false
-                  ? "incorrect"
-                  : "pending";
+              : branch.results[i] == null
+                ? "pending"
+                : branch.results[i]!.correct
+                  ? "correct"
+                  : "incorrect";
             const childBranches = Object.values(branches).filter(
               (b) => b.parentId === branch.id && b.spawnIndex === i
             );
@@ -318,11 +367,11 @@ export default function SqldPractice() {
             const status: "current" | "correct" | "incorrect" | "pending" =
               !activeBranch && i === mainIndex
                 ? "current"
-                : mainResults[i] === true
-                  ? "correct"
-                  : mainResults[i] === false
-                    ? "incorrect"
-                    : "pending";
+                : mainResults[i] == null
+                  ? "pending"
+                  : mainResults[i]!.correct
+                    ? "correct"
+                    : "incorrect";
             const childBranches = topBranches.filter((b) => b.spawnIndex === i);
             return (
               <div key={q.id}>

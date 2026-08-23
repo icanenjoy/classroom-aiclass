@@ -33,19 +33,21 @@ export function addAttempt(attempt: Attempt): void {
 // 현재 진행 중인 문제풀이 흐름(메인 흐름 + 브랜치) 자체를 저장 — 시험 선택
 // 화면으로 갔다가 돌아와도 어디까지 풀었는지 그대로 이어짐
 
+export type AnswerRecord = { selectedIndex: number; correct: boolean };
+
 export type SavedBranch = {
   id: string;
   topic: string;
   parentId: string | null;
   spawnIndex: number;
   questionIds: string[];
-  results: (boolean | null)[];
+  results: (AnswerRecord | null)[];
   cursor: number;
 };
 
 export type SavedSession = {
   mainFlowIds: string[];
-  mainResults: (boolean | null)[];
+  mainResults: (AnswerRecord | null)[];
   mainIndex: number;
   branches: Record<string, SavedBranch>;
   activeStack: string[];
