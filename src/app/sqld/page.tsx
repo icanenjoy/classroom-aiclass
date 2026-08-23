@@ -439,7 +439,7 @@ export default function SqldPractice() {
     const rate = answeredTotal > 0 ? Math.round((correctTotal / answeredTotal) * 100) : 0;
     return (
       <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 p-6 text-center">
-        <h1 className="text-2xl font-bold">SQL 함수 {mainFlow.length}문제를 모두 풀었습니다 🎉</h1>
+        <h1 className="text-2xl font-bold">SQLD {mainFlow.length}문제를 모두 풀었습니다 🎉</h1>
         <p className="text-gray-600">
           정답 {correctTotal} / {answeredTotal} ({rate}%)
         </p>

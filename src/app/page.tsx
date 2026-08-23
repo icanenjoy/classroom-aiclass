@@ -14,7 +14,7 @@ const exams: Exam[] = [
     {
         id: 'sqld',
         name: 'SQLD',
-        description: 'SQL 함수(윈도우·집계) 20문제',
+        description: '데이터모델링·SQL 기본/활용 30문제',
         href: '/sqld',
         category: '문제형',
     },
