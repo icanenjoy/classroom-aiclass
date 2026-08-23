@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import "pretendard/dist/web/static/pretendard.css";
 import "./globals.css";
 import { defaultAdConfig } from "@/data/adConfig";
@@ -18,18 +17,18 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className={`${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        {defaultAdConfig.clientId && (
-          // 애드센스 사이트 심사가 전 페이지에서 이 스크립트를 찾으므로 layout에 둔다
-          <Script
+      {defaultAdConfig.clientId && (
+        // 애드센스가 요구하는 그대로 정적 HTML <head> 안에 raw script 태그로 넣는다 —
+        // next/script는 실제 태그를 JS로 뒤늦게 주입해서 정적 HTML만 보는 크롤러엔 안 잡힐 수 있음
+        <head>
+          <script
             async
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${defaultAdConfig.clientId}`}
             crossOrigin="anonymous"
-            strategy="afterInteractive"
           />
-        )}
-        {children}
-      </body>
+        </head>
+      )}
+      <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
 }
