@@ -12,6 +12,7 @@ import {
 } from '@/lib/storage'
 import NotesPanel from '@/components/NotesPanel'
 import NotesDownloadButton from '@/components/NotesDownloadButton'
+import QuestionText from '@/components/QuestionText'
 
 type Question = {
     id: string
@@ -610,9 +611,7 @@ export default function SqldPractice() {
                     </span>
                 </div>
 
-                <h1 className="mb-4 whitespace-pre-wrap text-lg font-semibold">
-                    {current.questionText}
-                </h1>
+                <QuestionText text={current.questionText} />
 
                 <div className="flex flex-col gap-2">
                     {current.choices.map((choice, i) => {
