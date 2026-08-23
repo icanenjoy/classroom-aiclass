@@ -22,6 +22,7 @@ type Question = {
 };
 
 const MAX_BRANCH_DEPTH = 5;
+const MAX_BRANCH_QUESTIONS = 10; // 한 분기점(브랜치)당 최대 문제 수, 다 풀면 자동으로 상위 복귀
 
 type Branch = {
   id: string;
@@ -239,6 +240,11 @@ export default function SqldPractice() {
   function goNext() {
     if (activeBranch) {
       const nextCursor = activeBranch.cursor + 1;
+      if (nextCursor >= MAX_BRANCH_QUESTIONS) {
+        // 한 분기점에서 10문제를 다 풀면 무조건 상위 흐름으로 돌아간다
+        popBranch(activeBranch);
+        return;
+      }
       if (nextCursor < activeBranch.questions.length) {
         setSelected(null);
         setSubmitted(false);
