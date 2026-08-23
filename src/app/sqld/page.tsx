@@ -69,29 +69,26 @@ export default function SqldPractice() {
   const [loading, setLoading] = useState(true);
   const [hydrated, setHydrated] = useState(false);
 
-  const { solvedCount, answeredTotal, correctTotal } = useMemo(() => {
-    const ids = new Set<string>();
+  // 브랜치 안에서 같은 문제를 반복해서 풀 수 있으므로, 여기서는 "고유 문제 수"가
+  // 아니라 사이드바에 찍힌 동그라미 수(=답한 시도 수)를 그대로 센다
+  const { answeredTotal, correctTotal } = useMemo(() => {
     let total = 0;
     let correct = 0;
-    mainFlow.forEach((q, i) => {
-      const r = mainResults[i];
+    mainResults.forEach((r) => {
       if (r !== null && r !== undefined) {
-        ids.add(q.id);
         total++;
         if (r.correct) correct++;
       }
     });
     Object.values(branches).forEach((b) => {
-      b.questions.forEach((q, i) => {
-        const r = b.results[i];
+      b.results.forEach((r) => {
         if (r !== null && r !== undefined) {
-          ids.add(q.id);
           total++;
           if (r.correct) correct++;
         }
       });
     });
-    return { solvedCount: ids.size, answeredTotal: total, correctTotal: correct };
+    return { answeredTotal: total, correctTotal: correct };
   }, [mainFlow, mainResults, branches]);
 
   useEffect(() => {
@@ -501,7 +498,7 @@ export default function SqldPractice() {
 
       <div className="w-full">
         <div className="mb-4 flex items-center justify-between text-sm text-gray-500">
-          <span>지금까지 총 {solvedCount}문제</span>
+          <span>지금까지 총 {answeredTotal}문제</span>
           <span className="rounded bg-gray-100 px-2 py-1">
             {activeBranch ? `브랜치: ${activeBranch.keyword}` : current.topic}
           </span>
