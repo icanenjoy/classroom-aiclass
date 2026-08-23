@@ -40,6 +40,7 @@ export type SavedBranch = {
   topic: string;
   parentId: string | null;
   spawnIndex: number;
+  depth: number;
   questionIds: string[];
   results: (AnswerRecord | null)[];
   cursor: number;

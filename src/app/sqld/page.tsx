@@ -21,11 +21,14 @@ type Question = {
   difficulty: number;
 };
 
+const MAX_BRANCH_DEPTH = 5;
+
 type Branch = {
   id: string;
   topic: string;
   parentId: string | null; // null = 메인 흐름에서 갈라짐
   spawnIndex: number; // 부모 흐름에서 이 브랜치가 갈라진 위치
+  depth: number; // 메인 흐름에서 갈라진 첫 브랜치 = 1
   questions: Question[];
   results: (AnswerRecord | null)[];
   cursor: number;
@@ -108,6 +111,7 @@ export default function SqldPractice() {
               topic: b.topic,
               parentId: b.parentId,
               spawnIndex: b.spawnIndex,
+              depth: b.depth ?? 1,
               questions: b.questionIds.map((qid) => byId.get(qid)).filter((q): q is Question => !!q),
               results: b.results,
               cursor: b.cursor,
@@ -139,6 +143,7 @@ export default function SqldPractice() {
         topic: b.topic,
         parentId: b.parentId,
         spawnIndex: b.spawnIndex,
+        depth: b.depth,
         questionIds: b.questions.map((q) => q.id),
         results: b.results,
         cursor: b.cursor,
@@ -297,30 +302,45 @@ export default function SqldPractice() {
   // 브랜치 안에서 또 브랜치를 만들 때는(중첩) 같은 주제를 또 파고들지 않고
   // 반드시 다른 주제로 넘어간다. 첫 번째 브랜치(메인 흐름에서 갈라지는 것)는
   // 지금 막힌 그 개념을 그대로 더 푸는 것이므로 같은 주제 유지
+  // 지금 브랜치부터 위(부모) 방향으로 이미 쓰인 주제를 전부 모은다
+  function ancestorTopics(branch: Branch): Set<string> {
+    const topics = new Set<string>();
+    let cur: Branch | undefined = branch;
+    while (cur) {
+      topics.add(cur.topic);
+      cur = cur.parentId ? branches[cur.parentId] : undefined;
+    }
+    return topics;
+  }
+
+  // 브랜치 깊이는 최대 5, 중첩 브랜치는 지금까지(조상 전체) 안 쓴 새로운 주제만
+  // 추천한다. 추천할 주제가 없으면 null(=버튼 숨김)
   function nextDrillTopic(): string | null {
     if (!current) return null;
     if (!activeBranch) return current.topic;
-    const otherTopics = Array.from(new Set(allQuestions.map((q) => q.topic))).filter(
-      (t) => t !== activeBranch.topic
+    if (activeBranch.depth >= MAX_BRANCH_DEPTH) return null;
+    const used = ancestorTopics(activeBranch);
+    const freshTopics = Array.from(new Set(allQuestions.map((q) => q.topic))).filter(
+      (t) => !used.has(t)
     );
-    return otherTopics.length > 0 ? otherTopics[0] : activeBranch.topic;
+    return freshTopics.length > 0 ? shuffle(freshTopics)[0] : null;
   }
 
-  function drillTopic() {
+  function drillTopic(targetTopic: string) {
     if (!current) return;
-    const targetTopic = nextDrillTopic();
-    if (!targetTopic) return;
     const candidates = allQuestions.filter((q) => q.topic === targetTopic && q.id !== current.id);
     if (candidates.length === 0) return;
     const picked = shuffle(candidates)[0];
     const id = `branch-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const spawnIndex = activeBranch ? activeBranch.cursor : mainIndex;
     const parentId = activeBranch ? activeBranch.id : null;
+    const depth = activeBranch ? activeBranch.depth + 1 : 1;
     const newBranch: Branch = {
       id,
       topic: targetTopic,
       parentId,
       spawnIndex,
+      depth,
       questions: [picked],
       results: [null],
       cursor: 0,
@@ -392,6 +412,7 @@ export default function SqldPractice() {
 
   const isCorrect = submitted && selected === current.answerIndex;
   const topBranches = Object.values(branches).filter((b) => b.parentId === null);
+  const drillTarget = nextDrillTopic();
 
   return (
     <main className="mx-auto grid w-full grid-cols-1 gap-6 px-[100px] py-6 md:grid-cols-3">
@@ -487,12 +508,14 @@ export default function SqldPractice() {
               <button onClick={goNext} className="flex-1 rounded-md bg-black px-4 py-2 text-white">
                 다음 문제
               </button>
-              <button
-                onClick={drillTopic}
-                className="flex-1 rounded-md border border-black px-4 py-2"
-              >
-                {nextDrillTopic() ?? current.topic} 더 풀기
-              </button>
+              {drillTarget && (
+                <button
+                  onClick={() => drillTopic(drillTarget)}
+                  className="flex-1 rounded-md border border-black px-4 py-2"
+                >
+                  {drillTarget} 더 풀기
+                </button>
+              )}
               {activeBranch && (
                 <button
                   onClick={returnToParent}
