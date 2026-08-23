@@ -19,12 +19,6 @@ export function getAttempts(): Attempt[] {
   }
 }
 
-export function getSolvedCount(): number {
-  const attempts = getAttempts();
-  const uniqueQuestionIds = new Set(attempts.map((a) => a.questionId));
-  return uniqueQuestionIds.size; // 브랜치 포함 고유 문제 수, 재시도는 중복 제외
-}
-
 export function addAttempt(attempt: Attempt): void {
   if (typeof window === "undefined") return;
   try {

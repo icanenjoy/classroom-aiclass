@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { addAttempt, getSolvedCount } from "@/lib/storage";
+import { addAttempt } from "@/lib/storage";
 
 type Question = {
   id: string;
@@ -57,11 +57,19 @@ export default function SqldPractice() {
   const [loading, setLoading] = useState(true);
   const [sessionAnswered, setSessionAnswered] = useState(0);
   const [sessionCorrect, setSessionCorrect] = useState(0);
-  const [solvedCount, setSolvedCount] = useState(0);
 
-  useEffect(() => {
-    setSolvedCount(getSolvedCount());
-  }, []);
+  const solvedCount = useMemo(() => {
+    const ids = new Set<string>();
+    mainFlow.forEach((q, i) => {
+      if (mainResults[i] !== null) ids.add(q.id);
+    });
+    Object.values(branches).forEach((b) => {
+      b.questions.forEach((q, i) => {
+        if (b.results[i] !== null) ids.add(q.id);
+      });
+    });
+    return ids.size;
+  }, [mainFlow, mainResults, branches]);
 
   useEffect(() => {
     fetch("/api/questions")
@@ -93,7 +101,6 @@ export default function SqldPractice() {
       correct: isCorrect,
       answeredAt: new Date().toISOString(),
     });
-    setSolvedCount(getSolvedCount());
 
     if (activeBranch) {
       setBranches((prev) => {
