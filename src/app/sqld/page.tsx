@@ -388,7 +388,7 @@ export default function SqldPractice() {
   const topBranches = Object.values(branches).filter((b) => b.parentId === null);
 
   return (
-    <main className="mx-auto grid w-full grid-cols-1 gap-6 p-6 md:grid-cols-3">
+    <main className="mx-auto grid w-full grid-cols-1 gap-6 p-12 md:grid-cols-3">
       <aside className="w-full overflow-x-auto">
         <Link href="/" className="mb-3 block text-xs text-gray-500 underline">
           ← 시험 선택
