@@ -248,13 +248,15 @@ export default function SqldPractice() {
         }));
         return;
       }
-      // 미리 만들어두지 않고, 지금 필요한 시점에 같은 topic 문제를 하나 더 뽑는다
+      // 미리 만들어두지 않고, 지금 필요한 시점에 같은 topic 문제를 하나 더 뽑는다.
+      // 안 쓴 문제를 우선 뽑되, 그 topic을 이미 다 써버렸으면 반복해서 또 뽑는다
+      // (사용자가 원할 때까지 계속 풀 수 있어야 하고, "상위로 돌아가기"를 눌러야만 끝남)
       const usedIds = new Set(activeBranch.questions.map((q) => q.id));
-      const candidates = allQuestions.filter(
-        (q) => q.topic === activeBranch.topic && !usedIds.has(q.id)
-      );
-      if (candidates.length > 0) {
-        const nextQuestion = shuffle(candidates)[0];
+      const topicPool = allQuestions.filter((q) => q.topic === activeBranch.topic);
+      const unused = topicPool.filter((q) => !usedIds.has(q.id));
+      const pool = unused.length > 0 ? unused : topicPool;
+      if (pool.length > 0) {
+        const nextQuestion = shuffle(pool)[0];
         setSelected(null);
         setSubmitted(false);
         setBranches((prev) => {
@@ -270,7 +272,7 @@ export default function SqldPractice() {
           };
         });
       } else {
-        // 같은 topic 문제를 다 써버렸으면 상위로 자동 복귀
+        // 이 topic에 문제가 아예 없는 경우(데이터 문제)에만 상위로 자동 복귀
         popBranch(activeBranch);
       }
     } else {
@@ -372,7 +374,7 @@ export default function SqldPractice() {
               (b) => b.parentId === branch.id && b.spawnIndex === i
             );
             return (
-              <div key={q.id}>
+              <div key={`${branch.id}-${i}`}>
                 <div className="flex items-center gap-1.5">
                   <StatusDot status={status} />
                   <span className="text-[10px] text-gray-400">{i + 1}</span>
