@@ -18,6 +18,10 @@
 - `popBranch`(자동/수동 복귀 모두)는 `spawnIndex + 1`이 아니라 `spawnIndex`로 이동 — 분기를 냈던 문제를 **이미 제출된 상태**(선택한 답 + 해설)로 다시 보여주고, 거기서 "다음 문제"를 눌러야 그 다음으로 넘어감
 - 이를 위해 각 답변 기록을 `boolean`(정답 여부만) 대신 `{ selectedIndex, correct }`로 저장하도록 변경 (`src/lib/storage.ts`의 `AnswerRecord`)
 
+## 추가 수정 — 메인 흐름도 미리 안 만들기 + 중첩 브랜치는 다른 주제로
+- 메인 흐름(20문제)도 처음부터 다 만들어두지 않고 1번 문제부터 시작, "다음 문제"를 누를 때마다 하나씩 생성 (브랜치와 동일한 지연 생성 패턴)
+- 브랜치 안에서 또 "더 풀기"(중첩 브랜치)를 누르면 같은 주제를 또 파고들지 않고 반드시 다른 주제로 전환 (`nextDrillTopic()`). 첫 번째 브랜치(메인 흐름에서 갈라지는 것)는 막힌 그 개념을 그대로 더 푸는 것이므로 기존대로 같은 주제 유지
+
 ## 건드릴 파일
 - `src/app/sqld/page.tsx` — `Branch.results` 타입, `submitAnswer`, `drillTopic`, `goNext`, `popBranch`, 상태 점 렌더링
 - `src/lib/storage.ts` — `AnswerRecord` 타입 추가, `SavedBranch.results`/`SavedSession.mainResults` 타입 변경

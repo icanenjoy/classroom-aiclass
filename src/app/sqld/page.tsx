@@ -119,9 +119,9 @@ export default function SqldPractice() {
           setBranches(restoredBranches);
           setActiveStack(saved.activeStack);
         } else {
-          const shuffled = shuffle(data.questions);
-          setMainFlow(shuffled);
-          setMainResults(Array(shuffled.length).fill(null));
+          const first = shuffle(data.questions)[0];
+          setMainFlow(first ? [first] : []);
+          setMainResults(first ? [null] : []);
         }
 
         setLoading(false);
@@ -254,7 +254,21 @@ export default function SqldPractice() {
     } else {
       setSelected(null);
       setSubmitted(false);
-      setMainIndex((i) => i + 1);
+      const nextIndex = mainIndex + 1;
+      if (nextIndex < mainFlow.length) {
+        // 브랜치 갔다가 돌아온 뒤라 이미 생성돼 있는 자리
+        setMainIndex(nextIndex);
+        return;
+      }
+      // 메인 흐름도 20개를 미리 만들어두지 않고, 필요한 시점에 하나씩 뽑는다
+      const usedIds = new Set(mainFlow.map((q) => q.id));
+      const candidates = allQuestions.filter((q) => !usedIds.has(q.id));
+      if (candidates.length > 0) {
+        const nextQuestion = shuffle(candidates)[0];
+        setMainFlow((prev) => [...prev, nextQuestion]);
+        setMainResults((prev) => [...prev, null]);
+      }
+      setMainIndex(nextIndex);
     }
   }
 
@@ -263,9 +277,23 @@ export default function SqldPractice() {
     popBranch(activeBranch);
   }
 
+  // 브랜치 안에서 또 브랜치를 만들 때는(중첩) 같은 주제를 또 파고들지 않고
+  // 반드시 다른 주제로 넘어간다. 첫 번째 브랜치(메인 흐름에서 갈라지는 것)는
+  // 지금 막힌 그 개념을 그대로 더 푸는 것이므로 같은 주제 유지
+  function nextDrillTopic(): string | null {
+    if (!current) return null;
+    if (!activeBranch) return current.topic;
+    const otherTopics = Array.from(new Set(allQuestions.map((q) => q.topic))).filter(
+      (t) => t !== activeBranch.topic
+    );
+    return otherTopics.length > 0 ? otherTopics[0] : activeBranch.topic;
+  }
+
   function drillTopic() {
     if (!current) return;
-    const candidates = allQuestions.filter((q) => q.topic === current.topic && q.id !== current.id);
+    const targetTopic = nextDrillTopic();
+    if (!targetTopic) return;
+    const candidates = allQuestions.filter((q) => q.topic === targetTopic && q.id !== current.id);
     if (candidates.length === 0) return;
     const picked = shuffle(candidates)[0];
     const id = `branch-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -273,7 +301,7 @@ export default function SqldPractice() {
     const parentId = activeBranch ? activeBranch.id : null;
     const newBranch: Branch = {
       id,
-      topic: current.topic,
+      topic: targetTopic,
       parentId,
       spawnIndex,
       questions: [picked],
@@ -334,8 +362,9 @@ export default function SqldPractice() {
           className="rounded-md bg-black px-4 py-2 text-white"
           onClick={() => {
             clearSession();
-            setMainFlow((prev) => shuffle(prev));
-            setMainResults((prev) => Array(prev.length).fill(null));
+            const first = shuffle(allQuestions)[0];
+            setMainFlow(first ? [first] : []);
+            setMainResults(first ? [null] : []);
             setMainIndex(0);
             setBranches({});
             setActiveStack([]);
@@ -448,7 +477,7 @@ export default function SqldPractice() {
                 onClick={drillTopic}
                 className="flex-1 rounded-md border border-black px-4 py-2"
               >
-                {current.topic} 더 풀기
+                {nextDrillTopic() ?? current.topic} 더 풀기
               </button>
               {activeBranch && (
                 <button
