@@ -10,16 +10,14 @@ SQLD 준비생을 위한 SQL 함수(윈도우 함수·집계 함수) 문제 반�
 
 ```bash
 npm install
-npx prisma migrate dev   # 최초 1회: SQLite DB 생성
-npm run seed              # 문제 20개 시드
 npm run dev
 ```
 
-[http://localhost:3000](http://localhost:3000) 에서 확인.
+[http://localhost:3000](http://localhost:3000) 에서 확인. 문제 데이터는 [`src/data/questions.ts`](./src/data/questions.ts)에 정적으로 들어있어 DB 없이 바로 동작한다.
 
 ## 스택
 
-Next.js (App Router) + TypeScript + Prisma + SQLite (`@prisma/adapter-better-sqlite3`)
+Next.js (App Router) + TypeScript. DB 없음 (정적 데이터 파일) — 이유는 `CLAUDE.md`의 "스택 변경 이력" 참고
 
 ## 검증
 

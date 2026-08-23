@@ -1,12 +1,5 @@
-import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL ?? "file:./dev.db",
-});
-const prisma = new PrismaClient({ adapter });
-
-type Seed = {
+export type Question = {
+  id: string;
   topic: "윈도우함수" | "집계함수";
   questionText: string;
   choices: string[];
@@ -15,8 +8,9 @@ type Seed = {
   difficulty: number;
 };
 
-const questions: Seed[] = [
+export const questions: Question[] = [
   {
+    id: "win-1",
     topic: "윈도우함수",
     questionText:
       "부서별 급여 순위를 매기는데, 급여가 같으면 같은 순위를 주고 다음 순위를 건너뛰고 싶다. 사용할 함수는?",
@@ -27,6 +21,7 @@ const questions: Seed[] = [
     difficulty: 1,
   },
   {
+    id: "win-2",
     topic: "윈도우함수",
     questionText:
       "동점자에게 같은 순위를 주되, 다음 순위를 건너뛰지 않고 연속된 번호를 매기고 싶다면?",
@@ -37,6 +32,7 @@ const questions: Seed[] = [
     difficulty: 1,
   },
   {
+    id: "win-3",
     topic: "윈도우함수",
     questionText:
       "동점 여부와 상관없이 무조건 1,2,3,4처럼 고유한 순번을 매기고 싶을 때 쓰는 함수는?",
@@ -47,6 +43,7 @@ const questions: Seed[] = [
     difficulty: 1,
   },
   {
+    id: "win-4",
     topic: "윈도우함수",
     questionText:
       "다음 SQL에서 PARTITION BY가 하는 역할로 가장 정확한 설명은?\nSELECT dept, name, salary,\n  RANK() OVER (PARTITION BY dept ORDER BY salary DESC) AS rnk\nFROM employee;",
@@ -62,6 +59,7 @@ const questions: Seed[] = [
     difficulty: 2,
   },
   {
+    id: "win-5",
     topic: "윈도우함수",
     questionText:
       "SUM(salary) OVER (PARTITION BY dept ORDER BY hire_date) 와 같이 ORDER BY가 함께 있는 누적 합계는 무엇을 의미하는가?",
@@ -77,6 +75,7 @@ const questions: Seed[] = [
     difficulty: 3,
   },
   {
+    id: "win-6",
     topic: "윈도우함수",
     questionText:
       "각 직원의 급여와, 같은 부서에서 바로 이전에 입사한 직원의 급여를 한 행에 같이 보고 싶다. 사용할 함수는?",
@@ -87,9 +86,9 @@ const questions: Seed[] = [
     difficulty: 2,
   },
   {
+    id: "win-7",
     topic: "윈도우함수",
-    questionText:
-      "다음 중 파티션 내에서 다음 순번 행의 값을 가져오는 함수는?",
+    questionText: "다음 중 파티션 내에서 다음 순번 행의 값을 가져오는 함수는?",
     choices: ["LAG()", "LEAD()", "NTH_VALUE()", "SUM() OVER()"],
     answerIndex: 1,
     explanation:
@@ -97,9 +96,9 @@ const questions: Seed[] = [
     difficulty: 2,
   },
   {
+    id: "win-8",
     topic: "윈도우함수",
-    questionText:
-      "전체 사원을 급여 순으로 4개 그룹으로 균등하게 나누고 싶을 때(4분위) 쓰는 함수는?",
+    questionText: "전체 사원을 급여 순으로 4개 그룹으로 균등하게 나누고 싶을 때(4분위) 쓰는 함수는?",
     choices: ["RANK()", "NTILE(4)", "ROW_NUMBER()", "PARTITION BY(4)"],
     answerIndex: 1,
     explanation:
@@ -107,9 +106,9 @@ const questions: Seed[] = [
     difficulty: 2,
   },
   {
+    id: "win-9",
     topic: "윈도우함수",
-    questionText:
-      "GROUP BY와 윈도우 함수(OVER절)의 가장 근본적인 차이는 무엇인가?",
+    questionText: "GROUP BY와 윈도우 함수(OVER절)의 가장 근본적인 차이는 무엇인가?",
     choices: [
       "GROUP BY는 정렬을 지원하지 않는다",
       "GROUP BY는 그룹당 한 행으로 결과를 압축하지만, 윈도우 함수는 원본 행 수를 그대로 유지하며 각 행에 집계값을 붙여준다",
@@ -122,9 +121,9 @@ const questions: Seed[] = [
     difficulty: 2,
   },
   {
+    id: "win-10",
     topic: "윈도우함수",
-    questionText:
-      "부서별로 급여가 가장 높은 직원 1명씩만 조회하려고 한다. 가장 적절한 방법은?",
+    questionText: "부서별로 급여가 가장 높은 직원 1명씩만 조회하려고 한다. 가장 적절한 방법은?",
     choices: [
       "GROUP BY dept, MAX(salary)로 바로 조회한다",
       "RANK() OVER (PARTITION BY dept ORDER BY salary DESC)를 서브쿼리로 감싼 뒤 rnk = 1인 행만 필터링한다",
@@ -137,6 +136,7 @@ const questions: Seed[] = [
     difficulty: 3,
   },
   {
+    id: "agg-1",
     topic: "집계함수",
     questionText: "COUNT(*)와 COUNT(컬럼명)의 차이로 옳은 것은?",
     choices: [
@@ -151,6 +151,7 @@ const questions: Seed[] = [
     difficulty: 1,
   },
   {
+    id: "agg-2",
     topic: "집계함수",
     questionText: "SUM(), AVG() 같은 집계 함수가 NULL 값을 만났을 때의 기본 동작은?",
     choices: [
@@ -165,6 +166,7 @@ const questions: Seed[] = [
     difficulty: 2,
   },
   {
+    id: "agg-3",
     topic: "집계함수",
     questionText:
       "GROUP BY로 묶은 그룹 중에서, 그룹별 합계가 조건을 만족하는 그룹만 걸러내고 싶다. 사용할 절은?",
@@ -175,6 +177,7 @@ const questions: Seed[] = [
     difficulty: 1,
   },
   {
+    id: "agg-4",
     topic: "집계함수",
     questionText:
       "다음 쿼리가 오류 없이 실행되지 않는 이유는?\nSELECT dept, name, SUM(salary)\nFROM employee\nGROUP BY dept;",
@@ -190,6 +193,7 @@ const questions: Seed[] = [
     difficulty: 2,
   },
   {
+    id: "agg-5",
     topic: "집계함수",
     questionText: "다음 중 GROUP BY 없이 단독으로 사용해도 항상 결과가 1행만 나오는 함수 조합은?",
     choices: [
@@ -204,6 +208,7 @@ const questions: Seed[] = [
     difficulty: 2,
   },
   {
+    id: "agg-6",
     topic: "집계함수",
     questionText: "GROUP BY 절에서 여러 컬럼(dept, position)으로 묶으면 그룹은 어떻게 나뉘는가?",
     choices: [
@@ -218,9 +223,9 @@ const questions: Seed[] = [
     difficulty: 1,
   },
   {
+    id: "agg-7",
     topic: "집계함수",
-    questionText:
-      "COUNT(DISTINCT dept)는 무엇을 계산하는가?",
+    questionText: "COUNT(DISTINCT dept)는 무엇을 계산하는가?",
     choices: [
       "dept 값이 NULL이 아닌 전체 행 수",
       "dept의 중복을 제거한 서로 다른 부서의 개수",
@@ -233,6 +238,7 @@ const questions: Seed[] = [
     difficulty: 1,
   },
   {
+    id: "agg-8",
     topic: "집계함수",
     questionText:
       "부서별 평균 급여가 전체 평균 급여보다 높은 부서만 조회하려고 한다. 가장 적절한 절 조합은?",
@@ -248,9 +254,9 @@ const questions: Seed[] = [
     difficulty: 3,
   },
   {
+    id: "win-11",
     topic: "윈도우함수",
-    questionText:
-      "윈도우 함수는 SQL 실행 순서상 어느 단계 근처에서 처리되는가?",
+    questionText: "윈도우 함수는 SQL 실행 순서상 어느 단계 근처에서 처리되는가?",
     choices: [
       "FROM/WHERE보다 먼저 처리된다",
       "WHERE, GROUP BY, HAVING이 끝난 뒤, SELECT 목록을 구성할 때쯤 처리된다",
@@ -263,9 +269,9 @@ const questions: Seed[] = [
     difficulty: 3,
   },
   {
+    id: "win-12",
     topic: "윈도우함수",
-    questionText:
-      "RANK() OVER (ORDER BY salary DESC) = 1 조건을 WHERE 절에 직접 쓰면 오류가 나는 이유는?",
+    questionText: "RANK() OVER (ORDER BY salary DESC) = 1 조건을 WHERE 절에 직접 쓰면 오류가 나는 이유는?",
     choices: [
       "RANK() 함수 자체에 오타가 있어서",
       "윈도우 함수는 WHERE 절이 처리되는 시점에는 아직 계산되지 않았기 때문에",
@@ -278,29 +284,3 @@ const questions: Seed[] = [
     difficulty: 3,
   },
 ];
-
-async function main() {
-  await prisma.question.deleteMany();
-  for (const q of questions) {
-    await prisma.question.create({
-      data: {
-        topic: q.topic,
-        questionText: q.questionText,
-        choices: JSON.stringify(q.choices),
-        answerIndex: q.answerIndex,
-        explanation: q.explanation,
-        difficulty: q.difficulty,
-      },
-    });
-  }
-  console.log(`시드 완료: 문제 ${questions.length}개`);
-}
-
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
