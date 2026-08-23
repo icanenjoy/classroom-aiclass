@@ -1,0 +1,13 @@
+/* Crepe 기본 테마는 로드되지 않은 Noto Serif/Sans를 쓰다가 시스템 폰트로 깨져 보임 —
+   사이트 전체가 쓰는 Geist 폰트로 맞춘다 */
+.milkdown {
+  --crepe-font-default: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  --crepe-font-title: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  --crepe-font-code: var(--font-geist-mono), Menlo, Monaco, "Courier New", monospace;
+}
+
+/* 기본 테마의 padding: 60px 120px 는 전체 화면 폭 문서 기준이라
+   1/3 폭 사이드 패널에서는 쓸 수 있는 공간을 거의 다 잡아먹는다 */
+.milkdown .ProseMirror {
+  padding: 16px;
+}
