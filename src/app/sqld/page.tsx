@@ -13,6 +13,8 @@ import {
 import NotesPanel from '@/components/NotesPanel'
 import NotesDownloadButton from '@/components/NotesDownloadButton'
 import QuestionText from '@/components/QuestionText'
+import AdSenseBanner from '@/components/AdSenseBanner'
+import { defaultAdConfig } from '@/data/adConfig'
 
 type Question = {
     id: string
@@ -544,6 +546,9 @@ export default function SqldPractice() {
                     시험 선택으로 돌아가기
                 </Link>
                 <NotesDownloadButton />
+                <div className="w-full max-w-sm">
+                    <AdSenseBanner ad={defaultAdConfig} />
+                </div>
             </main>
         )
     }
@@ -694,6 +699,10 @@ export default function SqldPractice() {
                     나의 개념 정리
                 </p>
                 <NotesPanel />
+            </div>
+
+            <div className="md:col-span-3">
+                <AdSenseBanner ad={defaultAdConfig} />
             </div>
         </main>
     )

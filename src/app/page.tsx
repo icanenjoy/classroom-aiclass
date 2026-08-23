@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import AdSenseBanner from '@/components/AdSenseBanner'
+import { defaultAdConfig } from '@/data/adConfig'
 
 type Category = '문제형' | '실습형' | '미분류'
 
@@ -198,6 +200,10 @@ export default function ExamSelect() {
                     })}
                 </div>
             </section>
+
+            <div className="mt-10">
+                <AdSenseBanner ad={defaultAdConfig} />
+            </div>
         </main>
     )
 }
