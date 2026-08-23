@@ -19,21 +19,10 @@ export function getAttempts(): Attempt[] {
   }
 }
 
-export type Stats = {
-  total: number; // 고유 문제 수 (브랜치 포함, 재시도는 중복 제외)
-  correctRate: number; // 각 문제의 마지막 시도 기준 정답률(%)
-};
-
-export function getStats(): Stats {
+export function getSolvedCount(): number {
   const attempts = getAttempts();
-  const latestByQuestion = new Map<string, boolean>();
-  for (const a of attempts) {
-    latestByQuestion.set(a.questionId, a.correct); // 뒤에 온 시도가 앞의 것을 덮어써서 "마지막 시도"만 남음
-  }
-  const total = latestByQuestion.size;
-  const correctCount = [...latestByQuestion.values()].filter(Boolean).length;
-  const correctRate = total > 0 ? Math.round((correctCount / total) * 100) : 0;
-  return { total, correctRate };
+  const uniqueQuestionIds = new Set(attempts.map((a) => a.questionId));
+  return uniqueQuestionIds.size; // 브랜치 포함 고유 문제 수, 재시도는 중복 제외
 }
 
 export function addAttempt(attempt: Attempt): void {
