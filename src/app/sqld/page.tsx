@@ -15,6 +15,7 @@ import NotesDownloadButton from '@/components/NotesDownloadButton'
 import QuestionText from '@/components/QuestionText'
 import AdSenseBanner from '@/components/AdSenseBanner'
 import { defaultAdConfig } from '@/data/adConfig'
+import { markExamCompleted } from '@/lib/progress'
 
 type Question = {
     id: string
@@ -204,6 +205,10 @@ export default function SqldPractice() {
         : mainFlow[mainIndex]
     const done =
         !activeBranch && mainIndex >= mainFlow.length && mainFlow.length > 0
+
+    useEffect(() => {
+        if (done) markExamCompleted('sqld')
+    }, [done])
 
     function resetProgress() {
         clearSession()
@@ -534,6 +539,9 @@ export default function SqldPractice() {
                 <h1 className="text-2xl font-bold text-ink">
                     SQLD {mainFlow.length}문제를 모두 풀었습니다 🎉
                 </h1>
+                <p className="rounded-full bg-accent px-3 py-1 text-xs font-bold text-white">
+                    🏅 완수 뱃지 획득!
+                </p>
                 <p className="text-muted">
                     정답 {correctTotal} / {answeredTotal} ({rate}%)
                 </p>
