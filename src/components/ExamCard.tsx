@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import { markExamStarted } from '@/lib/progress'
 import type { Exam } from '@/types/exam'
 
 export function ExamCard({ exam }: { exam: Exam }) {
@@ -6,6 +9,7 @@ export function ExamCard({ exam }: { exam: Exam }) {
         return (
             <Link
                 href={exam.href}
+                onClick={() => markExamStarted(exam.id)}
                 className="block rounded-md border-2 border-accent bg-surface p-6 hover:bg-accent/5">
                 <h2 className="text-xl font-bold text-ink">{exam.name}</h2>
                 <p className="mt-1 text-sm text-muted">{exam.description}</p>
