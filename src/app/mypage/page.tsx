@@ -35,6 +35,8 @@ export default function MyPage() {
     const [progress, setProgress] = useState<ExamProgress[]>([])
 
     useEffect(() => {
+        // localStorage는 서버 렌더에 없으므로 첫 페인트는 빈 상태로 서버/클라 일치시키고, 마운트 후 채운다
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setProgress(getAllExamProgress())
     }, [])
 

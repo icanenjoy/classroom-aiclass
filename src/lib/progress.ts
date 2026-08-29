@@ -50,7 +50,7 @@ export function markExamCompleted(examId: string): void {
         examId,
         status: 'completed',
         startedAt: existing?.startedAt ?? new Date().toISOString(),
-        completedAt: new Date().toISOString(),
+        completedAt: existing?.completedAt ?? new Date().toISOString(),
     }
     writeAll(all)
 }
