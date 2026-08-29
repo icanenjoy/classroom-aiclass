@@ -35,6 +35,9 @@ export default function StepComplete({
             <p className="rounded-full bg-[#FFFBE0] px-2.5 py-0.5 text-[11px] font-bold text-[#807200]">
                 실제로 이체되지 않았습니다 · 연습 화면입니다
             </p>
+            <p className="rounded-full bg-[#EAF6FF] px-2.5 py-0.5 text-[11px] font-bold text-[#0B74C4]">
+                🏅 완수 뱃지 획득!
+            </p>
 
             <div className="mt-2 flex w-full flex-col gap-2">
                 <button

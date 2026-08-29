@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { generateScenario, type TransferScenario } from '@/data/kakaoBankTransferMock'
+import { markExamCompleted } from '@/lib/progress'
 import ScenarioPanel from './ScenarioPanel'
 import PhoneFrame from './PhoneFrame'
 import StepIntro from './StepIntro'
@@ -44,6 +45,10 @@ export default function KakaoBankTransferPractice() {
         generateScenario(),
     )
     const [state, setState] = useState<TransferState>(initialState)
+
+    useEffect(() => {
+        if (state.step === 'complete') markExamCompleted('kakao-bank-transfer')
+    }, [state.step])
 
     function handleRestart() {
         setScenario(generateScenario())
